@@ -46,6 +46,7 @@ WHY PYTHON?
 
 
 COMPILING AND LINKING:
+
 	(1) include Python.h wherever it is on your machine 
 	(2) this plugin needs to be linked against the Python binary:
 
@@ -53,8 +54,6 @@ COMPILING AND LINKING:
 	g++  -O2 -Wall -I. -fPIC -c -o pyvamp-main.o pyvamp-main.cpp
 	g++  -dynamiclib   -o vamp-pyvamp-plugin.dylib ./PyPlugScanner.o ./PyPlugin.o ./pyvamp-main.o sdk/vamp-sdk/libvamp-sdk.a 
 	-u _PyMac_Error /Library/Frameworks/Python.framework/Versions/2.5/Python
-
-	OR:
 	
 	(3) There is a modified Makefile from the VAMP-SDK that compiles this plugin by default.
 

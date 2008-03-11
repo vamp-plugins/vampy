@@ -38,22 +38,6 @@
  * This VAMP plugin is a wrapper for Python Scripts. (VamPy)
  * Centre for Digital Music, Queen Mary, University of London.
  * Copyright 2008, George Fazekas.
-
-TODO:	needs more complete error checking 
-	  	needs correct implementation of Python threading
-	  	more efficient data conversion using the buffering interface or ctypes
-	 	VAMP 'programs' not implemented
-		support multiple plugins per script in scanner
-		ensure proper cleanup, (host do a good job though)
-
-COMPILING AND LINKING:
-		(1) include Python.h wherever it is on your machine 
-		(2) this plugin needs to be linked against the Python binary:
-
-		example on on MacOSX:
-		g++  -O2 -Wall -I. -fPIC -c -o pyvamp-main.o pyvamp-main.cpp
-		g++  -dynamiclib   -o vamp-pyvamp-plugin.dylib ./PyPlugScanner.o ./PyPlugin.o ./pyvamp-main.o sdk/vamp-sdk/libvamp-sdk.a 
-		...	 -u _PyMac_Error /Library/Frameworks/Python.framework/Versions/2.5/Python
 */
 
 //#include "Python.h"
@@ -141,15 +125,14 @@ const VampPluginDescriptor
 			void *pylib = 0; 
 			
 			cerr << "Loading Python Interpreter at: " << pythonPath << endl;
-			//Preloading the binary allows the load of shared libs //dlopen("/Library/Frameworks/Python.framework/Versions/2.5/Python", RTLD_NOW|RTLD_GLOBAL);
-#ifdef _WIN32
+			//Preloading the binary allows the load of shared libs 
 			//TODO: check how to do RTLD_NOW on Windows
 			pylib = LoadLibrary(pythonPath.c_str());
 #else			
 			pylib = dlopen(pythonPath.c_str(), RTLD_NOW|RTLD_GLOBAL);
 #endif			
 			if (!pylib) cerr << "Warning: Could not preload Python." 
-						<< " Dynamic lodading in scripts will fail." << endl;
+						<< " Dynamic loading in scripts will fail." << endl;
 			Py_Initialize();
 	 		PyEval_InitThreads();			
 		} else {

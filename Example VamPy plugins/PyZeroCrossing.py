@@ -1,4 +1,4 @@
-'''PyZeroCrossing.py - Example plugin designed to demonstrate''' 
+'''PyZeroCrossing.py - Example plugin demonstrates''' 
 '''how to call a python class using the VamPy VAMP plugin'''
 
 #from time import *
@@ -38,7 +38,7 @@ class PyZeroCrossing:
 			
 	def getOutputDescriptors(self):
 		
-		#python dictionary
+		#descriptors are python dictionary
 		output0={
 		'identifier':'vampy-counts',
 		'name':'Number of Zero Crossings',
@@ -119,7 +119,7 @@ class PyZeroCrossing:
 				if crossing == True : 
 					count = count + 1
 					feature1={
-					'hasTimestamp':True,		#bool
+					'hasTimestamp':True,	
 					#for now return sample position and convert to RealTime in C code
 					'timeStamp':x				
 					#'values':[count]			
@@ -135,7 +135,7 @@ class PyZeroCrossing:
 
 		feature0={
 		'hasTimestamp':False,		
-		'values':[count],			#strictly must be a list
+		'values':[count],		#strictly must be a list
 		'label':str(count)				
 		}
 		output0.append(feature0)
