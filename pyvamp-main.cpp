@@ -127,6 +127,7 @@ const VampPluginDescriptor
 			cerr << "Loading Python Interpreter at: " << pythonPath << endl;
 			//Preloading the binary allows the load of shared libs 
 			//TODO: check how to do RTLD_NOW on Windows
+#ifdef _WIN32
 			pylib = LoadLibrary(pythonPath.c_str());
 #else			
 			pylib = dlopen(pythonPath.c_str(), RTLD_NOW|RTLD_GLOBAL);
