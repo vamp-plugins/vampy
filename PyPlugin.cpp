@@ -48,8 +48,7 @@ TODO:	needs more complete error checking
 
 */
 
-//#include "Python.h"
-#include "/usr/include/python/Python.h"
+#include <Python.h>
 #include "PyPlugin.h"
 
 #ifdef _WIN32
@@ -66,13 +65,13 @@ using std::cerr;
 using std::endl;
 using std::map;
 
-extern volatile bool mutex;
-
 // Maps to associate strings with enum values
 static std::map<std::string, eOutDescriptors> outKeys;
 static std::map<std::string, eSampleTypes> sampleKeys;
 static std::map<std::string, eFeatureFields> ffKeys;
 static std::map<std::string, p::eParmDescriptors> parmKeys;
+
+Mutex PyPlugin::m_pythonInterpreterMutex;
 
 void initMaps()
 {
@@ -170,33 +169,20 @@ PyPlugin::PyPlugin(std::string pluginKey,float inputSampleRate, PyObject *pyInst
 	m_class(pluginKey.substr(pluginKey.rfind(':')+1,pluginKey.size()-1)),
 	m_path((pluginKey.substr(0,pluginKey.rfind(pathsep))))
 {	
-
-/*TODO: this is a nasty way of ensuring the process is 
-finished before we create a new instance accessing the Python/C API.
-The Python/C API is not fully thread safe. 
-Calling into a python class while the process is doing heavy 
-computation may cause segmentation fault. 
-Manipulating the GIL and thread states only gave me a grief so far.*/
-	
-	if (mutex) {
-		cerr << "PyPlugin::PyPlugin:" << m_class 
-		<< " Warning: Waiting for clear signal from parallel process." << endl;
-		while (mutex) { }
-	}	
 }
 
 PyPlugin::~PyPlugin()
 {
 	cerr << "PyPlugin::PyPlugin:" << m_class 
 	<< " Instance deleted." << endl;
-	//for safety only. has been cleared after process.
-	mutex = false;	
 }
 
 
 string
 PyPlugin::getIdentifier() const
 {	
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getIdentifier"; 
 	cerr << "[call] " << method << endl;
 	string rString="VampPy-x";
@@ -226,6 +212,7 @@ PyPlugin::getIdentifier() const
 string
 PyPlugin::getName() const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
 
 	char method[]="getName";
 	cerr << "[call] " << method << endl;
@@ -254,6 +241,8 @@ PyPlugin::getName() const
 string
 PyPlugin::getDescription() const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getDescription";
 	cerr << "[call] " << method << endl;
 	string rString="Not given. (Hint: Implement getDescription method.)";
@@ -281,6 +270,8 @@ PyPlugin::getDescription() const
 string
 PyPlugin::getMaker() const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getMaker";
 	cerr << "[call] " << method << endl;
 	string rString="Generic VamPy Plugin.";
@@ -314,6 +305,8 @@ PyPlugin::getPluginVersion() const
 string
 PyPlugin::getCopyright() const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getCopyright";
 	cerr << "[call] " << method << endl;
 	string rString="BSD License";
@@ -343,6 +336,8 @@ PyPlugin::getCopyright() const
 bool
 PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
 
@@ -390,11 +385,14 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 void
 PyPlugin::reset()
 {
+	//!!! implement this!
     m_previousSample = 0.0f;
 }
 
 PyPlugin::InputDomain PyPlugin::getInputDomain() const 
 { 
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getInputDomain";
 	cerr << "[call] " << method << endl;
 	PyPlugin::InputDomain rValue = TimeDomain; // TimeDomain
@@ -420,6 +418,8 @@ PyPlugin::InputDomain PyPlugin::getInputDomain() const
 
 size_t PyPlugin::getPreferredBlockSize() const 
 { 
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getPreferredBlockSize";
 	cerr << "[call] " << method << endl;
 	size_t rValue=0; //not set by default
@@ -443,6 +443,8 @@ size_t PyPlugin::getPreferredBlockSize() const
 //size_t PyPlugin::getPreferredStepSize() const { return 0; }
 size_t PyPlugin::getPreferredStepSize() const 
 { 
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getPreferredStepSize";
 	cerr << "[call] " << method << endl;
 	size_t rValue=0; //not set by default
@@ -465,6 +467,8 @@ size_t PyPlugin::getPreferredStepSize() const
 
 size_t PyPlugin::getMinChannelCount() const 
 { 
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getMinChannelCount";
 	cerr << "[call] " << method << endl;
 	size_t rValue=1; //default value
@@ -487,6 +491,8 @@ size_t PyPlugin::getMinChannelCount() const
 
 size_t PyPlugin::getMaxChannelCount() const 
 { 
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getMaxChannelCount";	
 	cerr << "[call] " << method << endl;
 	size_t rValue=1; //default value
@@ -511,6 +517,8 @@ size_t PyPlugin::getMaxChannelCount() const
 PyPlugin::OutputList
 PyPlugin::getOutputDescriptors() const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	//PyEval_AcquireThread(newThreadState);
 	OutputList list;
 	OutputDescriptor od;
@@ -612,6 +620,8 @@ PyPlugin::getOutputDescriptors() const
 PyPlugin::ParameterList
 PyPlugin::getParameterDescriptors() const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	ParameterList list;
 	ParameterDescriptor pd;
 	char method[]="getParameterDescriptors";
@@ -693,6 +703,8 @@ PyPlugin::getParameterDescriptors() const
 
 void PyPlugin::setParameter(std::string paramid, float newval)
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="setParameter";
 	cerr << "[call] " << method << endl;
 
@@ -722,6 +734,8 @@ void PyPlugin::setParameter(std::string paramid, float newval)
 
 float PyPlugin::getParameter(std::string paramid) const
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	char method[]="getParameter";
 	cerr << "[call] " << method << endl;
 	float rValue = 0.0f;
@@ -763,12 +777,13 @@ PyPlugin::FeatureSet
 PyPlugin::process(const float *const *inputBuffers,
                       Vamp::RealTime timestamp)
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
     if (m_stepSize == 0) {
 	cerr << "ERROR: PyPlugin::process: "
 	     << "Plugin has not been initialised" << endl;
 	return FeatureSet();
     }
-	mutex = true;
 	static char method[]="process";
 
 #ifdef _DEBUG	
@@ -812,7 +827,6 @@ PyPlugin::process(const float *const *inputBuffers,
 			}
 			Py_CLEAR(pyMethod);
 			Py_CLEAR(pyOutputList);
-			mutex = false;
 			return FeatureSet();
 		}
 			
@@ -887,11 +901,9 @@ PyPlugin::process(const float *const *inputBuffers,
 
 		}//for i = FeatureSet
 		Py_CLEAR(pyOutputList);
-		mutex = false;
 		return returnFeatures;
 
 	}//if (has_attribute)
-	mutex = false;
 	return FeatureSet(); 
 }
 
@@ -900,11 +912,12 @@ PyPlugin::process(const float *const *inputBuffers,
 PyPlugin::FeatureSet
 PyPlugin::getRemainingFeatures()
 {
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
 	static char method[]="getRemainingFeatures";
 	cerr << "[call] " << method << endl;
 
 	//check if the method is implemented
-	mutex = true;
 	if ( ! PyObject_HasAttrString(m_pyInstance,method) ) {
 		return FeatureSet(); 
 		}
@@ -926,7 +939,6 @@ PyPlugin::getRemainingFeatures()
 			}
 			Py_CLEAR(pyMethod);
 			Py_CLEAR(pyOutputList);
-			mutex = false;
 			return FeatureSet();
 		}
 		Py_DECREF(pyMethod);
@@ -979,7 +991,6 @@ PyPlugin::getRemainingFeatures()
 			}// for j 			
 		}//for i 
 		Py_CLEAR(pyOutputList);
-		mutex = false;
 		return returnFeatures;
 }
 

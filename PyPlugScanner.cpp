@@ -6,7 +6,6 @@
 */
 
 
-#include "/usr/include/python/Python.h"
 #include "PyPlugScanner.h"
 
 //#include <fstream>
@@ -198,6 +197,12 @@ PyPlugScanner::listFiles(string dir, string extension)
 
 //Return correct plugin directories as per platform
 //Code taken from vamp-sdk/PluginHostAdapter.cpp
+
+//!!! It would probably be better to actually call
+// PluginHostAdapter::getPluginPath.  That would mean this "plugin"
+// needs to link against vamp-hostsdk, but that's probably acceptable
+// as it is sort of a host as well.
+
 std::vector<std::string>
 PyPlugScanner::getAllValidPath()
 {

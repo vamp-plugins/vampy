@@ -41,7 +41,7 @@
 #ifndef _VAMP_PYPLUG_SCANNER_H_
 #define _VAMP_PYPLUG_SCANNER_H_
 
-#include "/usr/include/python/Python.h"
+#include <Python.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -70,4 +70,4 @@ protected:
 };
 
 #endif	
-	
+

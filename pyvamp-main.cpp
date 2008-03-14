@@ -40,8 +40,7 @@
  * Copyright 2008, George Fazekas.
 */
 
-//#include "Python.h"
-#include "/usr/include/python/Python.h"
+#include <Python.h>
 #include "vamp/vamp.h"
 #include "vamp-sdk/PluginAdapter.h"
 #include "PyPlugScanner.h"

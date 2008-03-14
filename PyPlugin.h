@@ -40,7 +40,9 @@
 #define _PYTHON_WRAPPER_PLUGIN_H_
 
 #include "vamp-sdk/Plugin.h"
-#include "/usr/include/python/Python.h"
+#include <Python.h>
+
+#include "Mutex.h"
 
 //fields in OutputDescriptor
 enum eOutDescriptors {
@@ -130,6 +132,8 @@ protected:
 	std::string m_plugin;
 	std::string m_class;
 	std::string m_path;
+
+	static Mutex m_pythonInterpreterMutex;
 };
 
 
