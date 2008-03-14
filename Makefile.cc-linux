@@ -1,0 +1,9 @@
+
+CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5
+
+pyvamp.so:	PyPlugin.o PyPlugScanner.o pyvamp-main.o Mutex.o
+	g++ -shared $^ -o $@ -L../vamp-plugin-sdk/vamp-sdk -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython2.5 -lpthread
+
+clean:	
+	rm *.o
+
