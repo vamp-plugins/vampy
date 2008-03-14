@@ -194,3 +194,19 @@ Mutex::trylock()
 }
 
 #endif
+
+MutexLocker::MutexLocker(Mutex *mutex) :
+    m_mutex(mutex)
+{
+    if (m_mutex) {
+        m_mutex->lock();
+    }
+}
+
+MutexLocker::~MutexLocker()
+{
+    if (m_mutex) {
+        m_mutex->unlock();
+    }
+}
+
