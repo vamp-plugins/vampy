@@ -57,7 +57,7 @@ TODO:	needs more complete error checking
 #define pathsep ('/')
 #endif
 
-#define _DEBUG
+//#define _DEBUG
 
 using std::string;
 using std::vector;
@@ -72,109 +72,30 @@ static std::map<std::string, eFeatureFields> ffKeys;
 static std::map<std::string, p::eParmDescriptors> parmKeys;
 
 Mutex PyPlugin::m_pythonInterpreterMutex;
-
-void initMaps()
-{
-	outKeys["identifier"] = identifier;
-	outKeys["name"] = name;
-	outKeys["description"] = description;
-	outKeys["unit"] = unit;
-	outKeys["hasFixedBinCount"] = hasFixedBinCount; 
-	outKeys["binCount"] = binCount;
-	outKeys["binNames"] = binNames;
-	outKeys["hasKnownExtents"] = hasKnownExtents;
-	outKeys["minValue"] = minValue;
-	outKeys["maxValue"] = maxValue;
-	outKeys["isQuantized"] = isQuantized;
-	outKeys["quantizeStep"] = quantizeStep;
-	outKeys["sampleType"] = sampleType;
-	outKeys["sampleRate"] = sampleRate;
-
-	sampleKeys["OneSamplePerStep"] = OneSamplePerStep;
-	sampleKeys["FixedSampleRate"] = FixedSampleRate;
-	sampleKeys["VariableSampleRate"] = VariableSampleRate;
-
-	ffKeys["hasTimestamp"] = hasTimestamp;
-	ffKeys["timeStamp"] = timeStamp;
-	ffKeys["values"] = values;
-	ffKeys["label"] = label;
-
-	parmKeys["identifier"] = p::identifier;
-	parmKeys["name"] = p::name;
-	parmKeys["description"] = p::description;
-	parmKeys["unit"] = p::unit;
-	parmKeys["minValue"] = p::minValue;
-	parmKeys["maxValue"] = p::maxValue;
-	parmKeys["defaultValue"] = p::defaultValue;
-	parmKeys["isQuantized"] = p::isQuantized;
-
-}
-
-
-//missing API helper: convert Python list to C++ vector of strings
-//TODO: these could be templates if we need more of this kind
-std::vector<std::string> PyList_To_StringVector (PyObject *inputList) {
-	
-	std::vector<std::string> Output;
-	std::string ListElement;
-	PyObject *pyString = NULL;
-	
-	if (!PyList_Check(inputList)) return Output;
-
-	for (Py_ssize_t i = 0; i < PyList_GET_SIZE(inputList); ++i) {
-		//Get next list item (Borrowed Reference)
-		pyString = PyList_GET_ITEM(inputList,i);
-		ListElement = (string) PyString_AsString(PyObject_Str(pyString));
-		Output.push_back(ListElement);
-	}
-	return Output;
-}
-
-//missing API helper: convert Python list to C++ vector of floats
-std::vector<float> PyList_As_FloatVector (PyObject *inputList) {
-	
-	std::vector<float> Output;
-	float ListElement;
-	PyObject *pyFloat = NULL;
-	
-	if (!PyList_Check(inputList)) return Output; 
-
-	for (Py_ssize_t k = 0; k < PyList_GET_SIZE(inputList); ++k) {
-		//Get next list item (Borrowed Reference)
-		pyFloat =  PyList_GET_ITEM(inputList,k);
-		ListElement = (float) PyFloat_AS_DOUBLE(pyFloat);
-		Output.push_back(ListElement);
-	}
-
-	return Output;
-}
-
-/* TODO: find out why this produces error, also 
-		do sg more clever about handling RealTime
-Vamp::RealTime 
-PyFrame_As_RealTime (PyObject *frameNo,size_t inputSampleRate) {
-Vamp::RealTime result =  
-Vamp::RealTime::frame2RealTime((size_t)PyInt_AS_LONG(frameNo), inputSampleRate);
-return result;
-}
-*/
-
+static bool isMapInitialised = false;
 
 PyPlugin::PyPlugin(std::string pluginKey,float inputSampleRate, PyObject *pyInstance) :
     Plugin(inputSampleRate),
 	m_pyInstance(pyInstance),
 	m_stepSize(0),
-    m_previousSample(0.0f),
+	m_blockSize(0),
+    m_channels(0),
 	m_plugin(pluginKey),
 	m_class(pluginKey.substr(pluginKey.rfind(':')+1,pluginKey.size()-1)),
-	m_path((pluginKey.substr(0,pluginKey.rfind(pathsep))))
+	m_path((pluginKey.substr(0,pluginKey.rfind(pathsep)))),
+	m_processType(0),
+	m_pyProcess(NULL),
+	m_inputDomain(TimeDomain)
 {	
 }
 
 PyPlugin::~PyPlugin()
 {
+	Py_CLEAR(m_pyProcess);
+#ifdef _DEBUG
 	cerr << "PyPlugin::PyPlugin:" << m_class 
 	<< " Instance deleted." << endl;
+#endif
 }
 
 
@@ -185,7 +106,7 @@ PyPlugin::getIdentifier() const
 
 	char method[]="getIdentifier"; 
 	cerr << "[call] " << method << endl;
-	string rString="VampPy-x";
+	string rString="vampy-x";
 
 	if ( PyObject_HasAttrString(m_pyInstance,method) ) {
 
@@ -203,6 +124,7 @@ PyPlugin::getIdentifier() const
 
 		rString=PyString_AsString(pyString);
 		Py_CLEAR(pyString);
+		return rString;
 	}
 	cerr << "Warning: Plugin must return a unique identifier." << endl;
 	return rString;
@@ -336,15 +258,51 @@ PyPlugin::getCopyright() const
 bool
 PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
-	MutexLocker locker(&m_pythonInterpreterMutex);
-
+	
+	//placing Mutex before these calls causes deadlock
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
+	
+	m_inputDomain = getInputDomain();
 
-    m_stepSize = std::min(stepSize, blockSize);
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
+	//useful for debugging Python plugins
 	char method[]="initialise";
 	cerr << "[call] " << method << endl;
 
+	initMaps();
+
+	m_stepSize = stepSize;
+	m_blockSize = blockSize;
+	m_channels = channels;
+
+	//quering process implementation type
+	char legacyMethod[]="process";
+	char numpyMethod[]="processN";
+	m_processType = 0;
+
+	if (PyObject_HasAttrString(m_pyInstance,legacyMethod)) 
+	{ 
+		m_processType = legacyProcess;
+		m_pyProcess = PyString_FromString(legacyMethod);
+	}
+
+	if (PyObject_HasAttrString(m_pyInstance,numpyMethod))
+	{
+		m_processType = numpyProcess;
+		m_pyProcess = PyString_FromString(numpyMethod);
+	}
+	
+	if (!m_processType)
+	{
+		m_processType = not_implemented;
+		m_pyProcess = NULL;		
+		cerr << "Warning: Python plugin [" << m_class << "::" << method 
+		<< "] No process implementation found. Plugin will do nothing." << endl;
+	}
+
+	
 		//Check if the method is implemented in Python else return false
 		if (PyObject_HasAttrString(m_pyInstance,method)) {
    			
@@ -379,17 +337,26 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 				Py_CLEAR(pyBool); 
 				return false;}								
 		} 
-    	return true;
+    	return false;
 }
 
 void
 PyPlugin::reset()
 {
-	//!!! implement this!
-    m_previousSample = 0.0f;
+	MutexLocker locker(&m_pythonInterpreterMutex);
+
+	char method[]="reset";
+	cerr << "[call] " << method << endl;
+	
+	if ( PyObject_HasAttrString(m_pyInstance,method) ) {
+
+		PyObject_CallMethod(m_pyInstance, method, NULL);
+		if (PyErr_Occurred()) { PyErr_Print(); PyErr_Clear(); }		
+
+	}
 }
 
-PyPlugin::InputDomain PyPlugin::getInputDomain() const 
+PyPlugin::InputDomain PyPlugin::getInputDomain() const  
 { 
 	MutexLocker locker(&m_pythonInterpreterMutex);
 
@@ -415,6 +382,7 @@ PyPlugin::InputDomain PyPlugin::getInputDomain() const
 	}
     return rValue; 
 }
+
 
 size_t PyPlugin::getPreferredBlockSize() const 
 { 
@@ -517,8 +485,9 @@ size_t PyPlugin::getMaxChannelCount() const
 PyPlugin::OutputList
 PyPlugin::getOutputDescriptors() const
 {
+	
 	MutexLocker locker(&m_pythonInterpreterMutex);
-
+	
 	//PyEval_AcquireThread(newThreadState);
 	OutputList list;
 	OutputDescriptor od;
@@ -526,7 +495,7 @@ PyPlugin::getOutputDescriptors() const
 	cerr << "[call] " << method << endl;
 
 	//Check if the method is implemented in Python
-	if ( PyObject_HasAttrString(m_pyInstance,method) ) {
+	if ( ! PyObject_HasAttrString(m_pyInstance,method) ) return list;
 			
 		//Call the method: must return list object (new reference)
 		PyObject *pyList = 
@@ -607,13 +576,11 @@ PyPlugin::getOutputDescriptors() const
 						break;					
 					default : 	
 						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
-				} // switch					
-			} // while dict keys
+				} 					
+			} // while dict
 			list.push_back(od);
-		} // for each memeber in outputlist
+		} // for list
 		Py_CLEAR(pyList);
-	} // if method is implemented
-    //PyEval_ReleaseThread(newThreadState);
 	return list;
 }
 
@@ -628,7 +595,7 @@ PyPlugin::getParameterDescriptors() const
 	cerr << "[call] " << method << endl;
 
 	//Check if the method is implemented in Python
-	if ( PyObject_HasAttrString(m_pyInstance,method) ) {
+	if ( ! PyObject_HasAttrString(m_pyInstance,method) ) return list;
 			
 		//Call the method: must return list object (new reference)
 		PyObject *pyList = 
@@ -692,12 +659,11 @@ PyPlugin::getParameterDescriptors() const
 						break;					
 					default : 	
 						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
-				} // switch					
-			} // while dict keys
+				} 				
+			} // while dict
 			list.push_back(pd);
-		} // for each memeber in outputlist
+		} // for list
 		Py_CLEAR(pyList);
-	} // if 
 	return list;
 }
 
@@ -779,41 +745,68 @@ PyPlugin::process(const float *const *inputBuffers,
 {
 	MutexLocker locker(&m_pythonInterpreterMutex);
 
-    if (m_stepSize == 0) {
+#ifdef _DEBUG	
+	cerr << "[call] process, frame:" << proccounter << endl;
+	proccounter++;
+#endif
+
+    if (m_blockSize == 0) {
 	cerr << "ERROR: PyPlugin::process: "
 	     << "Plugin has not been initialised" << endl;
 	return FeatureSet();
     }
-	static char method[]="process";
 
-#ifdef _DEBUG	
-	cerr << "[call] " << method << " frame:" << proccounter << endl;
-	proccounter++;
-	//cerr << "C: proc..." << proccounter << " " << endl;
-#endif
+	if (m_processType == not_implemented) {
+	cerr << "ERROR: In Python plugin [" << m_class   
+		 << "] No process implementation found. Returning empty feature set." << endl;
+	return FeatureSet();
+	}
 
-	//proces::Check if the method is implemented in Python
-	if ( PyObject_HasAttrString(m_pyInstance,method) )
-	{	
+	string method=PyString_AsString(m_pyProcess);
+
+	
+
+		PyObject *pyOutputList = NULL;
 		
-		//Pack method name into Python Object
-		PyObject *pyMethod = PyString_FromString(method);
+		/*new numPy support*/
+		if (m_processType == numpyProcess) {
+
+		//declare buffer object
+		PyObject *pyBuffer; 
+
+		//Expose memory using the Buffer Interface of C/API		
+		//This will virtually pass a pointer only that can be 
+		//recasted in Python code             
+		pyBuffer = 
+		PyBuffer_FromMemory((void *) (float *) inputBuffers[0], 
+		(Py_ssize_t) sizeof(float) * m_blockSize);
+		
+		//Call python process (returns new reference)
+		pyOutputList = 
+		PyObject_CallMethodObjArgs(m_pyInstance,m_pyProcess,pyBuffer,NULL);
+
+		} 
+		
+		if (m_processType == legacyProcess) { 
 
 		//Declare new list object
 		PyObject *pyFloat, *pyList;
-		pyList = PyList_New((Py_ssize_t) m_stepSize);
+		pyList = PyList_New((Py_ssize_t) m_blockSize);
 
 		//Pack samples into a Python List Object
-		//pyFloat will always be new references, 
+		//pyFloat types will always be new references, 
 		//these will be discarded when the list is deallocated
-		for (size_t i = 0; i < m_stepSize; ++i) {
+		for (size_t i = 0; i < m_blockSize; ++i) {
 		pyFloat=PyFloat_FromDouble((double) inputBuffers[0][i]);
 		PyList_SET_ITEM(pyList, (Py_ssize_t) i, pyFloat);
 		}
-		
+
 		//Call python process (returns new reference)
-		PyObject *pyOutputList = 
-		PyObject_CallMethodObjArgs(m_pyInstance,pyMethod,pyList,NULL);
+		pyOutputList = 
+		PyObject_CallMethodObjArgs(m_pyInstance,m_pyProcess,pyList,NULL);
+						
+		}
+
 
 		//Check return type
 		if (pyOutputList == NULL || !PyList_Check(pyOutputList) ) {
@@ -825,12 +818,12 @@ PyPlugin::process(const float *const *inputBuffers,
 				cerr << "ERROR: In Python plugin [" << m_class << "::" << method 
 				<< "] Expected List return type." << endl;				
 			}
-			Py_CLEAR(pyMethod);
+			//Py_CLEAR(pyMethod);
 			Py_CLEAR(pyOutputList);
 			return FeatureSet();
 		}
 			
-		Py_DECREF(pyMethod);
+		//Py_DECREF(pyMethod);
 		// Py_DECREF(pyList); 
 		// This appears to be tracked by the cyclic garbage collector
 		// hence decrefing produces GC error
@@ -902,9 +895,6 @@ PyPlugin::process(const float *const *inputBuffers,
 		}//for i = FeatureSet
 		Py_CLEAR(pyOutputList);
 		return returnFeatures;
-
-	}//if (has_attribute)
-	return FeatureSet(); 
 }
 
 
@@ -993,4 +983,98 @@ PyPlugin::getRemainingFeatures()
 		Py_CLEAR(pyOutputList);
 		return returnFeatures;
 }
+
+bool
+PyPlugin::initMaps() const
+{
+
+	if (isMapInitialised) return true;
+
+	outKeys["identifier"] = identifier;
+	outKeys["name"] = name;
+	outKeys["description"] = description;
+	outKeys["unit"] = unit;
+	outKeys["hasFixedBinCount"] = hasFixedBinCount; 
+	outKeys["binCount"] = binCount;
+	outKeys["binNames"] = binNames;
+	outKeys["hasKnownExtents"] = hasKnownExtents;
+	outKeys["minValue"] = minValue;
+	outKeys["maxValue"] = maxValue;
+	outKeys["isQuantized"] = isQuantized;
+	outKeys["quantizeStep"] = quantizeStep;
+	outKeys["sampleType"] = sampleType;
+	outKeys["sampleRate"] = sampleRate;
+
+	sampleKeys["OneSamplePerStep"] = OneSamplePerStep;
+	sampleKeys["FixedSampleRate"] = FixedSampleRate;
+	sampleKeys["VariableSampleRate"] = VariableSampleRate;
+
+	ffKeys["hasTimestamp"] = hasTimestamp;
+	ffKeys["timeStamp"] = timeStamp;
+	ffKeys["values"] = values;
+	ffKeys["label"] = label;
+
+	parmKeys["identifier"] = p::identifier;
+	parmKeys["name"] = p::name;
+	parmKeys["description"] = p::description;
+	parmKeys["unit"] = p::unit;
+	parmKeys["minValue"] = p::minValue;
+	parmKeys["maxValue"] = p::maxValue;
+	parmKeys["defaultValue"] = p::defaultValue;
+	parmKeys["isQuantized"] = p::isQuantized;
+
+	isMapInitialised = true;
+	return true;
+}
+
+
+//missing API helper: convert Python list to C++ vector of strings
+//TODO: these could be templates if we need more of this kind
+std::vector<std::string> 
+PyPlugin::PyList_To_StringVector (PyObject *inputList) const {
+	
+	std::vector<std::string> Output;
+	std::string ListElement;
+	PyObject *pyString = NULL;
+	
+	if (!PyList_Check(inputList)) return Output;
+
+	for (Py_ssize_t i = 0; i < PyList_GET_SIZE(inputList); ++i) {
+		//Get next list item (Borrowed Reference)
+		pyString = PyList_GET_ITEM(inputList,i);
+		ListElement = (string) PyString_AsString(PyObject_Str(pyString));
+		Output.push_back(ListElement);
+	}
+	return Output;
+}
+
+//missing API helper: convert Python list to C++ vector of floats
+std::vector<float> 
+PyPlugin::PyList_As_FloatVector (PyObject *inputList) const {
+	
+	std::vector<float> Output;
+	float ListElement;
+	PyObject *pyFloat = NULL;
+	
+	if (!PyList_Check(inputList)) return Output; 
+
+	for (Py_ssize_t k = 0; k < PyList_GET_SIZE(inputList); ++k) {
+		//Get next list item (Borrowed Reference)
+		pyFloat =  PyList_GET_ITEM(inputList,k);
+		ListElement = (float) PyFloat_AS_DOUBLE(pyFloat);
+		Output.push_back(ListElement);
+	}
+
+	return Output;
+}
+
+/* TODO: find out why this produces error, also 
+		do sg more clever about handling RealTime
+Vamp::RealTime 
+PyFrame_As_RealTime (PyObject *frameNo,size_t inputSampleRate) {
+Vamp::RealTime result =  
+Vamp::RealTime::frame2RealTime((size_t)PyInt_AS_LONG(frameNo), inputSampleRate);
+return result;
+}
+*/
 

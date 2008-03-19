@@ -92,6 +92,11 @@ enum eFeatureFields {
 	label
 	};
 
+enum eProcessType {
+	not_implemented,
+	legacyProcess,
+	numpyProcess
+	};
 
 class PyPlugin : public Vamp::Plugin
 {
@@ -101,7 +106,7 @@ public:
 
     bool initialise(size_t channels, size_t stepSize, size_t blockSize);
     void reset();
-	//virtuals:
+
 	InputDomain getInputDomain() const;
 	size_t getPreferredBlockSize() const;
 	size_t getPreferredStepSize() const; 
@@ -128,10 +133,18 @@ FeatureSet process(const float *const *inputBuffers,
 protected:
 	PyObject *m_pyInstance;
     size_t m_stepSize;
-    float m_previousSample;
+    size_t m_blockSize;
+    size_t m_channels;
 	std::string m_plugin;
 	std::string m_class;
 	std::string m_path;
+	int m_processType;
+	PyObject *m_pyProcess;
+	InputDomain m_inputDomain;
+	
+	bool initMaps() const;
+	std::vector<std::string> PyList_To_StringVector (PyObject *inputList) const;
+	std::vector<float> PyList_As_FloatVector (PyObject *inputList) const;
 
 	static Mutex m_pythonInterpreterMutex;
 };

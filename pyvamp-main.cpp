@@ -61,7 +61,7 @@ using std::endl;
 using std::string;
 using std::vector;
 
-volatile bool mutex = false;
+//volatile bool mutex = false;
 static int adinstcount;
 
 class PyPluginAdapter : public Vamp::PluginAdapterBase
@@ -149,7 +149,7 @@ const VampPluginDescriptor
 		scanner = PyPlugScanner::getInstance();
 		pyPath=scanner->getAllValidPath();
 		//add this as extra path for development
-		pyPath.push_back("/Users/Shared/Development/vamp-experiments");
+		//pyPath.push_back("/Users/Shared/Development/vamp-experiments");
 		scanner->setPath(pyPath);
 		pyPlugs = scanner->getPyPlugs();
 		cerr << "Found " << pyPlugs.size() << " Scripts ...OK" << endl;
@@ -161,6 +161,7 @@ const VampPluginDescriptor
 			adapters.push_back( new PyPluginAdapter(pyPlugs[i],pyInstances[i]));
 		} 
 		haveScannedPlugins=true;		
+		
 	}
 
 	cerr << "Accessing adapter index: " << index << " (adapters: " << adapters.size() << ")" << endl;

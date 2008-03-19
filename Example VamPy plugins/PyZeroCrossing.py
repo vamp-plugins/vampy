@@ -7,7 +7,7 @@
 class PyZeroCrossing: 
 	
 	def __init__(self): 
-		self.m_imputSampleRate = 44100 
+		self.m_imputSampleRate = 0.0 
 		self.m_stepSize = 0
 		self.m_blockSize = 0
 		self.m_channels = 0
@@ -38,7 +38,7 @@ class PyZeroCrossing:
 			
 	def getOutputDescriptors(self):
 		
-		#descriptors are python dictionary
+		#descriptors are python dictionaries
 		output0={
 		'identifier':'vampy-counts',
 		'name':'Number of Zero Crossings',
@@ -131,7 +131,7 @@ class PyZeroCrossing:
 			self.previousSample = prev
 		else :
 			count = 0.0
-			self.previousSample = inbuf[len(inbuf)-2]
+			self.previousSample = inbuf[len(inbuf)-1]
 
 		feature0={
 		'hasTimestamp':False,		

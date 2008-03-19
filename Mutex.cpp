@@ -6,7 +6,6 @@
 */
 
 #include "Mutex.h"
-
 #include <iostream>
 
 #ifndef _WIN32
