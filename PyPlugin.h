@@ -33,7 +33,7 @@
 */
 
 	/**
-	 * This plugin abstracts appropriate Python Scripts as a VAMP plugin.
+	 * This plugin abstracts appropriate Python Scripts as a Vamp plugin.
 	*/
 
 #ifndef _PYTHON_WRAPPER_PLUGIN_H_

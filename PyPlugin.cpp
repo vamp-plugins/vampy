@@ -35,14 +35,14 @@
 
 
 /**
- * This VAMP plugin is a wrapper for Python Scripts. (vampy)
+ * This Vamp plugin is a wrapper for Python Scripts. (vampy)
  * Centre for Digital Music, Queen Mary, University of London.
  * Copyright 2008, George Fazekas.
 
 TODO:	needs more complete error checking 
 	  	needs correct implementation of Python threading
 	  	more efficient data conversion using the buffering interface or ctypes
-	 	VAMP programs not implemented
+	 	Vamp programs not implemented
 		support multiple plugins per script in scanner
 		ensure proper cleanup, host do a good job though
 
@@ -515,7 +515,7 @@ PyPlugin::getOutputDescriptors() const
 		//Parse Output List
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyList); ++i) {
 	
-			//Get i-th VAMP output descriptor (Borrowed Reference)
+			//Get i-th Vamp output descriptor (Borrowed Reference)
 			pyDict = PyList_GET_ITEM(pyList,i);
 			
 			//We only care about dictionaries holding output descriptors
@@ -530,7 +530,7 @@ PyPlugin::getOutputDescriptors() const
 				switch (outKeys[PyString_AsString(pyKey)]) 
 				{
 					case not_found : 	
-						cerr << "Unknown key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Unknown key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 						break;
 					case identifier: 	
 						od.identifier = PyString_AsString(pyValue); 
@@ -575,7 +575,7 @@ PyPlugin::getOutputDescriptors() const
 						od.sampleRate = (float) PyFloat_AS_DOUBLE(pyValue);
 						break;					
 					default : 	
-						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 					
 			} // while dict
 			list.push_back(od);
@@ -616,7 +616,7 @@ PyPlugin::getParameterDescriptors() const
 		//Parse Output List
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyList); ++i) {
 	
-			//Get i-th VAMP output descriptor (Borrowed Reference)
+			//Get i-th Vamp output descriptor (Borrowed Reference)
 			pyDict = PyList_GET_ITEM(pyList,i);
 			
 			//We only care about dictionaries holding output descriptors
@@ -631,7 +631,7 @@ PyPlugin::getParameterDescriptors() const
 				switch (parmKeys[PyString_AsString(pyKey)]) 
 				{
 					case not_found : 	
-						cerr << "Unknown key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Unknown key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 						break;
 					case p::identifier: 	
 						pd.identifier = PyString_AsString(pyValue); 
@@ -658,7 +658,7 @@ PyPlugin::getParameterDescriptors() const
 						pd.isQuantized = (bool) PyInt_AS_LONG(pyValue); 
 						break;					
 					default : 	
-						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 				
 			} // while dict
 			list.push_back(pd);
@@ -864,7 +864,7 @@ PyPlugin::process(const float *const *inputBuffers,
 					switch (ffKeys[PyString_AsString(pyKey)]) 
 					{
 						case not_found : 	
-							cerr << "Unknown key in VAMP FeatureSet: " 
+							cerr << "Unknown key in Vamp FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 							break;
 						case hasTimestamp: 	
@@ -882,7 +882,7 @@ PyPlugin::process(const float *const *inputBuffers,
 							feature.label = PyString_AsString(pyValue); 
 							break; 													
 						default : 	
-							cerr << "Invalid key in VAMP FeatureSet: " 
+							cerr << "Invalid key in Vamp FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 					} // switch					
 
@@ -956,7 +956,7 @@ PyPlugin::getRemainingFeatures()
 					switch (ffKeys[PyString_AsString(pyKey)]) 
 					{
 						case not_found : 	
-							cerr << "Unknown key in VAMP FeatureSet: " 
+							cerr << "Unknown key in Vamp FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 							break;
 						case hasTimestamp: 	

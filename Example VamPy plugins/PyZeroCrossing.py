@@ -1,5 +1,5 @@
 '''PyZeroCrossing.py - Example plugin demonstrates''' 
-'''how to call a python class using the VamPy VAMP plugin'''
+'''how to call a python class using the VamPy Vamp plugin'''
 
 #from time import *
 #import sys

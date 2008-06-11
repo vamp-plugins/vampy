@@ -1,12 +1,12 @@
 
- * VamPy is a VAMP plugin wrapper for Python Scripts.
+ * VamPy is a Vamp plugin wrapper for Python Scripts.
 
 WHAT IS IT FOR?
 	
-	you can write VAMP plugins in Python which can do the same as the native C++ plugins
+	you can write Vamp plugins in Python which can do the same as the native C++ plugins
 	plus more if you're using advanced Python modules.
 
-	you might get into VAMP development more easily this way.
+	you might get into Vamp development more easily this way.
 	you can use it for prototyping your plugin before writing in C++	 
 
 
@@ -26,15 +26,15 @@ HOW DOES IT WORK:
 
 	(1) Make sure you have Python installed.
 	(2) Compile the C++ source or ask me for a binary (MacOS).
-	(3) Copy the library in your Vamp plugin directory like any other VAMP plugins: 
-		eg. /Library/Audio/Plug-Ins/VAMP
+	(3) Copy the library in your Vamp plugin directory like any other Vamp plugins: 
+		eg. /Library/Audio/Plug-Ins/Vamp
 	(4) Write your python plugins and copy them to the same place.
 	(5) Each plugin must contain a single class with the same name as your script file.
 		e.g. PyZeroCrossing.py -> calss PyZeroCrossing
 		-Scripts with syntax errors in them are ignored.
 		-Scripts not having the same class as the filename are ignored.
 		-Other unknown scripts are likely to cause a nasty crash. 
-		(Don't put other python scripts in your VAMP directory.)
+		(Don't put other python scripts in your Vamp directory.)
 
 	
 WHY PYTHON?
@@ -55,13 +55,13 @@ COMPILING AND LINKING:
 	g++  -dynamiclib   -o vamp-pyvamp-plugin.dylib ./PyPlugScanner.o ./PyPlugin.o ./pyvamp-main.o sdk/vamp-sdk/libvamp-sdk.a 
 	-u _PyMac_Error /Library/Frameworks/Python.framework/Versions/2.5/Python
 	
-	(3) There is a modified Makefile from the VAMP-SDK that compiles this plugin by default.
+	(3) There is a modified Makefile from the Vamp SDK that compiles this plugin by default.
 
 
 TODO:	needs more complete error checking 
 	  	needs correct implementation of Python threading
 	  	more efficient data conversion using the buffering interface or ctypes
-	 	VAMP 'programs' not implemented
+	 	Vamp 'programs' not implemented
 		support multiple classes per script in scanner
 		ensure proper cleanup, (host do a good job though)
 

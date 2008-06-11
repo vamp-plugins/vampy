@@ -35,7 +35,7 @@
 */
 
 /**
- * This VAMP plugin is a wrapper for Python Scripts. (VamPy)
+ * This Vamp plugin is a wrapper for Python Scripts. (VamPy)
  * Centre for Digital Music, Queen Mary, University of London.
  * Copyright 2008, George Fazekas.
 */
