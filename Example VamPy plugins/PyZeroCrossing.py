@@ -1,9 +1,6 @@
 '''PyZeroCrossing.py - Example plugin demonstrates''' 
 '''how to call a python class using the VamPy Vamp plugin'''
 
-#from time import *
-#import sys
-
 class PyZeroCrossing: 
 	
 	def __init__(self): 
@@ -12,7 +9,7 @@ class PyZeroCrossing:
 		self.m_blockSize = 0
 		self.m_channels = 0
 		self.previousSample = 0.0
-		self.threshold = 0.05
+		self.threshold = 0.01
 		
 	def initialise(self,channels,stepSize,blockSize,inputSampleRate):
 		self.m_channels = channels
@@ -25,7 +22,7 @@ class PyZeroCrossing:
 		return 'VamPy Example Plugins'
 	
 	def getName(self):
-		return 'Zero Crossing (VamPy)'
+		return 'Vampy Zero Crossings'
 		
 	def getIdentifier(self):
 		return 'python-zc'
@@ -78,7 +75,7 @@ class PyZeroCrossing:
 		'unit':'v',
 		'minValue':0.0,
 		'maxValue':0.5,
-		'defaultValue':0.05,
+		'defaultValue':0.005,
 		'isQuantized':False
 		}
 		return [paramlist1]
@@ -94,10 +91,11 @@ class PyZeroCrossing:
 		else:
 			return 0.0
 			
-	def process(self,inbuf):
+	def process(self,inbuf,timestamp):
 		crossing = False
 		prev = self.previousSample
 		count = 0.0;
+		channel = inbuf[0]
 
 		#we have two outputs defined thus we have to declare
 		#them as empty dictionaries in our output list
@@ -105,11 +103,11 @@ class PyZeroCrossing:
 		output0=[]
 		output1=[]
 
-		if abs(sum(inbuf)) > self.threshold : 
-			for x in range(len(inbuf)-1) :
-				
+		if sum([abs(s) for s in channel]) > self.threshold : 
+
+			for x in range(len(channel)-1) :
 				crossing = False
-				sample = inbuf[x]
+				sample = channel[x]
 				if sample <= 0.0 : 
 					if prev > 0.0 : crossing = True
 				else :
@@ -121,20 +119,22 @@ class PyZeroCrossing:
 					feature1={
 					'hasTimestamp':True,	
 					#for now return sample position and convert to RealTime in C code
-					'timeStamp':x				
-					#'values':[count]			
-					#'label':label				
+					'timeStamp':long(timestamp + x),				
+					'values':[count],			
+					'label':str(count),				
 					}				
 					output1.append(feature1)
 			
 				prev = sample	
 			self.previousSample = prev
+
 		else :
 			count = 0.0
-			self.previousSample = inbuf[len(inbuf)-1]
+			self.previousSample = channel[len(channel)-1]
 
 		feature0={
 		'hasTimestamp':False,		
+		#'timeStamp':timestamp,				
 		'values':[count],		#strictly must be a list
 		'label':str(count)				
 		}

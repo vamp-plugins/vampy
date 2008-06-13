@@ -140,7 +140,13 @@ PyPlugScanner::getScriptInstance(string path, string classname)
 		PyObject *pyInstance = PyObject_CallObject(pyClass, NULL);
 		//cerr << "__(getInstance) PyPlugin Class: " << m_class << " successfully created.__" << endl;
 		return pyInstance; 
-	}	else return NULL;
+	}	
+	else {
+		cerr << "ERROR: callable plugin class could not be found in source: " << classname << endl 
+			<< "Hint: plugin source filename and plugin class name must be the same." << endl;
+		PyErr_Print(); 
+		return NULL;
+	}
 }
 
 

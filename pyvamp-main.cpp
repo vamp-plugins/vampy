@@ -114,7 +114,7 @@ const VampPluginDescriptor
 	//cerr << "# haveScannedPlugins: " << haveScannedPlugins << endl;
 
 	if (!haveScannedPlugins) {
-		
+
 		if (!isPythonInitialized) {
 
 			string pythonPath = 

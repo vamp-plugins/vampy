@@ -20,7 +20,7 @@ install:
 	mkdir -p $(INSTALL_DIR)
 	rm -f $(INSTALL_DIR)/$(PLUGIN_NAME)$(PLUGIN_EXT)
 	cp $(PLUGIN_NAME)$(PLUGIN_EXT) $(INSTALL_DIR)/$(PLUGIN_NAME)$(PLUGIN_EXT)	
-	cp $(PYEXAMPLE_DIR)/*.py $(INSTALL_DIR)
+#	cp $(PYEXAMPLE_DIR)/*.py $(INSTALL_DIR)
 	
 installplug : install
 cleanplug : clean

@@ -35,7 +35,7 @@
 
 
 /**
- * This Vamp plugin is a wrapper for Python Scripts. (vampy)
+ * This Vamp plugin is a wrapper for Python Scripts. (VamPy)
  * Centre for Digital Music, Queen Mary, University of London.
  * Copyright 2008, George Fazekas.
 
@@ -258,6 +258,9 @@ PyPlugin::getCopyright() const
 bool
 PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
+	//useful for debugging Python plugins
+	char method[]="initialise";
+	cerr << "[call] " << method << endl;
 	
 	//placing Mutex before these calls causes deadlock
     if (channels < getMinChannelCount() ||
@@ -266,10 +269,6 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 	m_inputDomain = getInputDomain();
 
 	MutexLocker locker(&m_pythonInterpreterMutex);
-
-	//useful for debugging Python plugins
-	char method[]="initialise";
-	cerr << "[call] " << method << endl;
 
 	initMaps();
 
@@ -280,15 +279,16 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 	//quering process implementation type
 	char legacyMethod[]="process";
 	char numpyMethod[]="processN";
-	m_processType = 0;
 
-	if (PyObject_HasAttrString(m_pyInstance,legacyMethod)) 
+	if (PyObject_HasAttrString(m_pyInstance,legacyMethod) &
+		m_processType == 0) 
 	{ 
 		m_processType = legacyProcess;
 		m_pyProcess = PyString_FromString(legacyMethod);
 	}
 
-	if (PyObject_HasAttrString(m_pyInstance,numpyMethod))
+	if (PyObject_HasAttrString(m_pyInstance,numpyMethod) & 
+		m_processType == 0)
 	{
 		m_processType = numpyProcess;
 		m_pyProcess = PyString_FromString(numpyMethod);
@@ -315,7 +315,7 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 			//Call the method
 			PyObject *pyBool = 
 			PyObject_CallMethodObjArgs(m_pyInstance,pyMethod,pyChannels,pyStepSize,pyBlockSize,pyInputSampleRate,NULL);
-			
+						
 			Py_DECREF(pyMethod);
 			Py_DECREF(pyChannels);
 			Py_DECREF(pyStepSize);
@@ -323,7 +323,8 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 			Py_DECREF(pyInputSampleRate);
 
 			//Check return value
-			if (!PyBool_Check(pyBool)) {
+			if (PyErr_Occurred() || !PyBool_Check(pyBool)) {
+				PyErr_Print(); PyErr_Clear();
 				Py_CLEAR(pyBool);
 				cerr << "ERROR: In Python plugin [" << m_class << "::" << method 
 				<< "] Expected Bool return value." << endl;
@@ -415,7 +416,7 @@ size_t PyPlugin::getPreferredStepSize() const
 
 	char method[]="getPreferredStepSize";
 	cerr << "[call] " << method << endl;
-	size_t rValue=0; //not set by default
+	size_t rValue=1024; //not set by default
 	if ( PyObject_HasAttrString(m_pyInstance,method) ) {
 		PyObject *pyInt = PyObject_CallMethod(m_pyInstance, method, NULL);
 		
@@ -515,7 +516,7 @@ PyPlugin::getOutputDescriptors() const
 		//Parse Output List
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyList); ++i) {
 	
-			//Get i-th Vamp output descriptor (Borrowed Reference)
+			//Get i-th VAMP output descriptor (Borrowed Reference)
 			pyDict = PyList_GET_ITEM(pyList,i);
 			
 			//We only care about dictionaries holding output descriptors
@@ -530,7 +531,7 @@ PyPlugin::getOutputDescriptors() const
 				switch (outKeys[PyString_AsString(pyKey)]) 
 				{
 					case not_found : 	
-						cerr << "Unknown key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Unknown key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 						break;
 					case identifier: 	
 						od.identifier = PyString_AsString(pyValue); 
@@ -573,9 +574,11 @@ PyPlugin::getOutputDescriptors() const
 						break;
 					case sampleRate:
 						od.sampleRate = (float) PyFloat_AS_DOUBLE(pyValue);
+//						od.sampleRate = m_inputSampleRate / m_stepSize;
+						cerr << od.sampleRate << endl;
 						break;					
 					default : 	
-						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 					
 			} // while dict
 			list.push_back(od);
@@ -616,7 +619,7 @@ PyPlugin::getParameterDescriptors() const
 		//Parse Output List
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyList); ++i) {
 	
-			//Get i-th Vamp output descriptor (Borrowed Reference)
+			//Get i-th VAMP output descriptor (Borrowed Reference)
 			pyDict = PyList_GET_ITEM(pyList,i);
 			
 			//We only care about dictionaries holding output descriptors
@@ -631,7 +634,7 @@ PyPlugin::getParameterDescriptors() const
 				switch (parmKeys[PyString_AsString(pyKey)]) 
 				{
 					case not_found : 	
-						cerr << "Unknown key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Unknown key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 						break;
 					case p::identifier: 	
 						pd.identifier = PyString_AsString(pyValue); 
@@ -658,7 +661,7 @@ PyPlugin::getParameterDescriptors() const
 						pd.isQuantized = (bool) PyInt_AS_LONG(pyValue); 
 						break;					
 					default : 	
-						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 				
 			} // while dict
 			list.push_back(pd);
@@ -750,7 +753,7 @@ PyPlugin::process(const float *const *inputBuffers,
 	proccounter++;
 #endif
 
-    if (m_blockSize == 0) {
+    if (m_blockSize == 0 || m_channels == 0) {
 	cerr << "ERROR: PyPlugin::process: "
 	     << "Plugin has not been initialised" << endl;
 	return FeatureSet();
@@ -764,49 +767,77 @@ PyPlugin::process(const float *const *inputBuffers,
 
 	string method=PyString_AsString(m_pyProcess);
 
-	
-
 		PyObject *pyOutputList = NULL;
 		
 		/*new numPy support*/
 		if (m_processType == numpyProcess) {
+			
+			//create a list of buffers
+			PyObject *pyChannelList = PyList_New((Py_ssize_t) m_channels);
+			for (size_t i=0; i < m_channels; ++i) {
 
-		//declare buffer object
-		PyObject *pyBuffer; 
+				//Expose memory using the Buffer Interface of C/API		
+				//This will virtually pass a pointer which can be 
+				//recasted in Python code as float or complex array             
+				PyObject *pyBuffer = PyBuffer_FromMemory
+				((void *) (float *) inputBuffers[i], 
+				(Py_ssize_t) sizeof(float) * m_blockSize);
 
-		//Expose memory using the Buffer Interface of C/API		
-		//This will virtually pass a pointer only that can be 
-		//recasted in Python code             
-		pyBuffer = 
-		PyBuffer_FromMemory((void *) (float *) inputBuffers[0], 
-		(Py_ssize_t) sizeof(float) * m_blockSize);
+			PyList_SET_ITEM(pyChannelList, (Py_ssize_t) i, pyBuffer);
+			}
+
+			//pass RealTime as frameCount
+			PyObject *pyLongSample = PyLong_FromLong (
+			Vamp::RealTime::realTime2Frame 
+			(timestamp, (unsigned int) m_inputSampleRate));
 		
-		//Call python process (returns new reference)
-		pyOutputList = 
-		PyObject_CallMethodObjArgs(m_pyInstance,m_pyProcess,pyBuffer,NULL);
+			//Call python process (returns new reference)
+			pyOutputList = PyObject_CallMethodObjArgs
+			(m_pyInstance,m_pyProcess,pyChannelList,pyLongSample,NULL);
+			
+			Py_DECREF(pyChannelList);
+			Py_DECREF(pyLongSample);
 
 		} 
 		
 		if (m_processType == legacyProcess) { 
 
-		//Declare new list object
-		PyObject *pyFloat, *pyList;
-		pyList = PyList_New((Py_ssize_t) m_blockSize);
+			//create a list of lists
+			PyObject *pyChannelList = PyList_New((Py_ssize_t) m_channels);
+			for (size_t i=0; i < m_channels; ++i) {
 
-		//Pack samples into a Python List Object
-		//pyFloat types will always be new references, 
-		//these will be discarded when the list is deallocated
-		for (size_t i = 0; i < m_blockSize; ++i) {
-		pyFloat=PyFloat_FromDouble((double) inputBuffers[0][i]);
-		PyList_SET_ITEM(pyList, (Py_ssize_t) i, pyFloat);
+				//Declare new list object
+				PyObject *pyFloat, *pyList;
+				pyList = PyList_New((Py_ssize_t) m_blockSize);
+
+				//Pack samples into a Python List Object
+				//pyFloat types will always be new references, 
+				//these will be discarded when the list is deallocated
+				for (size_t j = 0; j < m_blockSize; ++j) {
+					pyFloat=PyFloat_FromDouble(
+						(double) inputBuffers[i][j]);
+					PyList_SET_ITEM(pyList, (Py_ssize_t) j, pyFloat);
+				}
+				PyList_SET_ITEM(pyChannelList, (Py_ssize_t) i, pyList);				
+			}
+
+			//pass RealTime as frameCount
+			PyObject *pyLongSample = PyLong_FromLong (
+			Vamp::RealTime::realTime2Frame 
+			(timestamp, (unsigned int) m_inputSampleRate));
+
+			//Call python process (returns new reference)
+			pyOutputList = PyObject_CallMethodObjArgs
+			(m_pyInstance,m_pyProcess,pyChannelList,pyLongSample,NULL);
+			
+			Py_DECREF(pyChannelList);
+			Py_DECREF(pyLongSample);
+
 		}
 
-		//Call python process (returns new reference)
-		pyOutputList = 
-		PyObject_CallMethodObjArgs(m_pyInstance,m_pyProcess,pyList,NULL);
-						
-		}
-
+		//return nothing
+		//Py_CLEAR(pyOutputList);
+		//return FeatureSet();
 
 		//Check return type
 		if (pyOutputList == NULL || !PyList_Check(pyOutputList) ) {
@@ -818,12 +849,10 @@ PyPlugin::process(const float *const *inputBuffers,
 				cerr << "ERROR: In Python plugin [" << m_class << "::" << method 
 				<< "] Expected List return type." << endl;				
 			}
-			//Py_CLEAR(pyMethod);
 			Py_CLEAR(pyOutputList);
 			return FeatureSet();
 		}
 			
-		//Py_DECREF(pyMethod);
 		// Py_DECREF(pyList); 
 		// This appears to be tracked by the cyclic garbage collector
 		// hence decrefing produces GC error
@@ -864,16 +893,22 @@ PyPlugin::process(const float *const *inputBuffers,
 					switch (ffKeys[PyString_AsString(pyKey)]) 
 					{
 						case not_found : 	
-							cerr << "Unknown key in Vamp FeatureSet: " 
+							cerr << "Unknown key in VAMP FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 							break;
 						case hasTimestamp: 	
 							feature.hasTimestamp = (bool) PyInt_AS_LONG(pyValue); 
 							break;				
 						case timeStamp: 			
-							feature.timestamp = timestamp + 
-							Vamp::RealTime::frame2RealTime
-							((size_t)PyInt_AS_LONG(pyValue), (size_t)m_inputSampleRate);
+							feature.timestamp =  
+							Vamp::RealTime::frame2RealTime(
+							PyLong_AsLong(pyValue), 
+							(unsigned int) m_inputSampleRate );
+#ifdef _DEBUG
+							cerr << "Timestamp: " 
+							<< (long)PyLong_AsLong(pyValue) << ", ->" 
+							<< feature.timestamp.toString() << endl;
+#endif
 							break;
 						case values: 	
 							feature.values = PyList_As_FloatVector(pyValue); 
@@ -882,7 +917,7 @@ PyPlugin::process(const float *const *inputBuffers,
 							feature.label = PyString_AsString(pyValue); 
 							break; 													
 						default : 	
-							cerr << "Invalid key in Vamp FeatureSet: " 
+							cerr << "Invalid key in VAMP FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 					} // switch					
 
@@ -935,13 +970,17 @@ PyPlugin::getRemainingFeatures()
 	
 		PyObject *pyFeatureList, *pyDict, *pyKey, *pyValue;
 		FeatureSet returnFeatures;
-
+		
+		//iterate through list of outputs
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyOutputList); ++i) {
 
 			pyFeatureList = PyList_GET_ITEM(pyOutputList,i);
 
+			//iterate list of Features
 			for (Py_ssize_t j = 0; j < PyList_GET_SIZE(pyFeatureList); ++j) {				
-
+#ifdef _DEBUG
+				cerr << "feature: " << j << endl;
+#endif
 				pyDict = PyList_GET_ITEM(pyFeatureList,j);
 
 				if ( !PyDict_Check(pyDict) ) continue;
@@ -956,17 +995,22 @@ PyPlugin::getRemainingFeatures()
 					switch (ffKeys[PyString_AsString(pyKey)]) 
 					{
 						case not_found : 	
-							cerr << "Unknown key in Vamp FeatureSet: " 
+							cerr << "Unknown key in VAMP FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 							break;
 						case hasTimestamp: 	
 							feature.hasTimestamp = (bool) PyInt_AS_LONG(pyValue); 
 							break;				
-						// TODO: clarify what to do here
 						case timeStamp: 			
 							feature.timestamp =  
-							Vamp::RealTime::frame2RealTime
-							((size_t)PyInt_AS_LONG(pyValue), (size_t)m_inputSampleRate);
+							Vamp::RealTime::frame2RealTime(
+							PyLong_AsLong(pyValue), 
+							(unsigned int) m_inputSampleRate );
+#ifdef _DEBUG
+							cerr << "Timestamp: " 
+							<< (long)PyLong_AsLong(pyValue) << ", ->" 
+							<< feature.timestamp.toString() << endl;
+#endif
 							break;
 						case values: 	
 							feature.values = PyList_As_FloatVector(pyValue); 
@@ -1062,6 +1106,9 @@ PyPlugin::PyList_As_FloatVector (PyObject *inputList) const {
 		//Get next list item (Borrowed Reference)
 		pyFloat =  PyList_GET_ITEM(inputList,k);
 		ListElement = (float) PyFloat_AS_DOUBLE(pyFloat);
+#ifdef _DEBUG
+		cerr << "value: " << ListElement << endl;
+#endif
 		Output.push_back(ListElement);
 	}
 
