@@ -1,0 +1,22 @@
+
+This is the place for Vampy-host.
+For now there is one object: pyRealTime which implements a wrapper around Vamp::RealTime.
+
+Using pyRealTime:
+
+(1) Compile: make pyRealTime.so
+(2) Test it in Python: 
+
+>>>import pyRealTime
+>>>from pyRealTime import *
+>>> dir(pyRealTime)
+['__doc__', '__file__', '__name__', 'frame2RealTime', 'realtime']
+>>>t = realtime(2,0)
+>>>t.sec
+2
+>>>t.nsec
+0
+>>> dir(realtime())
+['test', 'toFloat', 'toFrame', 'toText', 'values']
+>>> frame2RealTime(22050*10,22050).values()
+(10, 0)
