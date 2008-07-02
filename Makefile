@@ -4,10 +4,6 @@ CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5
 vampy.dylib:	PyPlugin.o PyPlugScanner.o pyvamp-main.o Mutex.o
 	g++ -shared $^ -o $@ -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
 
-clean:	
-	rm *.o
-
-
 # Install plugin
 #
 LIBRARY_PREFIX		:=/Library
@@ -20,7 +16,12 @@ install:
 	mkdir -p $(INSTALL_DIR)
 	rm -f $(INSTALL_DIR)/$(PLUGIN_NAME)$(PLUGIN_EXT)
 	cp $(PLUGIN_NAME)$(PLUGIN_EXT) $(INSTALL_DIR)/$(PLUGIN_NAME)$(PLUGIN_EXT)	
-#	cp $(PYEXAMPLE_DIR)/*.py $(INSTALL_DIR)
+	cp $(PYEXAMPLE_DIR)/*.py $(INSTALL_DIR)
 	
 installplug : install
 cleanplug : clean
+
+clean:	
+	rm *.o
+	rm *$(PLUGIN_EXT)
+	
