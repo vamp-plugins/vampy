@@ -82,7 +82,7 @@ class PySpectralCentroid:
 		else:
 			return 0.0
 			
-	def process(self,inbuf):
+	def process(self,inbuf,timestamp):
 		inArray = array(inbuf[0])
 		crossing = False
 		prev = self.previousSample
