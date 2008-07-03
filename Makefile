@@ -1,5 +1,5 @@
 
-CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5
+CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 -fvisibility=hidden
 
 vampy.dylib:	PyPlugin.o PyPlugScanner.o pyvamp-main.o Mutex.o
 	g++ -shared $^ -o $@ -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
