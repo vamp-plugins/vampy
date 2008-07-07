@@ -104,6 +104,62 @@ protected:
 static std::vector<PyPluginAdapter *> adapters;
 static bool haveScannedPlugins = false;
 
+static bool tryPreload(string name)
+{
+//    cerr << "Trying to load Python interpreter library \"" << name << "\"...";
+    void *lib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    if (!lib) {
+//        char *err = dlerror();
+//        if (err && err[0]) {
+//            cerr << " failed (" << err << ")" << endl;
+//        } else {
+//            cerr << " failed" << endl;
+//        }
+        return false;
+    }
+//    cerr << " succeeded" << endl;
+    return true;
+}
+
+static bool preloadPython()
+{
+    // Linux-specific
+
+    string pyver = Py_GetVersion();
+    int dots = 2;
+    string shortver;
+    for (int i = 0; i < pyver.length(); ++i) {
+        if (pyver[i] == '.') {
+            if (--dots == 0) {
+                shortver = pyver.substr(0, i);
+                break;
+            }
+        }
+    }
+    cerr << "Short version: " << shortver << endl;
+
+    vector<string> pfxs;
+    pfxs.push_back("");
+    pfxs.push_back(string(Py_GetExecPrefix()) + "/lib/");
+    pfxs.push_back(string(Py_GetExecPrefix()) + "/");
+    pfxs.push_back("/usr/lib/");
+    pfxs.push_back("/usr/local/lib/");
+    char buffer[5];
+
+    // hahaha! grossness is like a brother to us
+    for (int pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
+        for (int minor = 8; minor >= 0; --minor) {
+            sprintf(buffer, "%d", minor);
+            if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".so." + buffer)) return true;
+        }
+        if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".so")) return true;
+        if (tryPreload(pfxs[pfxidx] + string("libpython.so"))) return true;
+    }
+        
+    return false;
+}
+    
+
 const VampPluginDescriptor 
 *vampGetPluginDescriptor(unsigned int version,unsigned int index)
 {	
@@ -117,10 +173,12 @@ const VampPluginDescriptor
 
 		if (!isPythonInitialized) {
 
-			string pythonPath = 
-			(string) Py_GetExecPrefix() + pathsep +
-			(string) Py_GetProgramName();
-			
+			if (!preloadPython()) {
+                            cerr << "Warning: Could not preload Python." 
+                                 << " Dynamic loading in scripts will fail." << endl;
+                        }
+
+/*
 			void *pylib = 0; 
 			
 			cerr << "Loading Python Interpreter at: " << pythonPath << endl;
@@ -133,6 +191,7 @@ const VampPluginDescriptor
 #endif			
 			if (!pylib) cerr << "Warning: Could not preload Python." 
 						<< " Dynamic loading in scripts will fail." << endl;
+*/
 			Py_Initialize();
 	 		PyEval_InitThreads();			
 		} else {
