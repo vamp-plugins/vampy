@@ -123,7 +123,7 @@ static bool tryPreload(string name)
 
 static bool preloadPython()
 {
-    // Linux-specific
+    // useless on Windows
 
     string pyver = Py_GetVersion();
     int dots = 2;
@@ -147,6 +147,16 @@ static bool preloadPython()
     char buffer[5];
 
     // hahaha! grossness is like a brother to us
+#ifdef __APPLE__
+    for (int pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
+        for (int minor = 8; minor >= 0; --minor) {
+            sprintf(buffer, "%d", minor);
+            if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".dylib." + buffer)) return true;
+        }
+        if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".dylib")) return true;
+        if (tryPreload(pfxs[pfxidx] + string("libpython.dylib"))) return true;
+    }
+#else
     for (int pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
         for (int minor = 8; minor >= 0; --minor) {
             sprintf(buffer, "%d", minor);
@@ -155,6 +165,7 @@ static bool preloadPython()
         if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".so")) return true;
         if (tryPreload(pfxs[pfxidx] + string("libpython.so"))) return true;
     }
+#endif
         
     return false;
 }
