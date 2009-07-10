@@ -128,7 +128,7 @@ static bool preloadPython()
     string pyver = Py_GetVersion();
     int dots = 2;
     string shortver;
-    for (int i = 0; i < pyver.length(); ++i) {
+    for (size_t i = 0; i < pyver.length(); ++i) {
         if (pyver[i] == '.') {
             if (--dots == 0) {
                 shortver = pyver.substr(0, i);
@@ -148,7 +148,7 @@ static bool preloadPython()
 
     // hahaha! grossness is like a brother to us
 #ifdef __APPLE__
-    for (int pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
+    for (size_t pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
         for (int minor = 8; minor >= 0; --minor) {
             sprintf(buffer, "%d", minor);
             if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".dylib." + buffer)) return true;
@@ -157,7 +157,7 @@ static bool preloadPython()
         if (tryPreload(pfxs[pfxidx] + string("libpython.dylib"))) return true;
     }
 #else
-    for (int pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
+    for (size_t pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
         for (int minor = 8; minor >= 0; --minor) {
             sprintf(buffer, "%d", minor);
             if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".so." + buffer)) return true;

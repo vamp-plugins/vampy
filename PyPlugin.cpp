@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
     Vamp
 
@@ -66,7 +67,7 @@ using std::endl;
 using std::map;
 
 // Maps to associate strings with enum values
-static std::map<std::string, eOutDescriptors> outKeys;
+static std::map<std::string, o::eOutDescriptors> outKeys;
 static std::map<std::string, eSampleTypes> sampleKeys;
 static std::map<std::string, eFeatureFields> ffKeys;
 static std::map<std::string, p::eParmDescriptors> parmKeys;
@@ -280,15 +281,15 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 	char legacyMethod[]="process";
 	char numpyMethod[]="processN";
 
-	if (PyObject_HasAttrString(m_pyInstance,legacyMethod) &
-		m_processType == 0) 
+	if (PyObject_HasAttrString(m_pyInstance,legacyMethod) &&
+	    m_processType == 0) 
 	{ 
 		m_processType = legacyProcess;
 		m_pyProcess = PyString_FromString(legacyMethod);
 	}
 
-	if (PyObject_HasAttrString(m_pyInstance,numpyMethod) & 
-		m_processType == 0)
+	if (PyObject_HasAttrString(m_pyInstance,numpyMethod) &&
+	    m_processType == 0)
 	{
 		m_processType = numpyProcess;
 		m_pyProcess = PyString_FromString(numpyMethod);
@@ -516,7 +517,7 @@ PyPlugin::getOutputDescriptors() const
 		//Parse Output List
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyList); ++i) {
 	
-			//Get i-th VAMP output descriptor (Borrowed Reference)
+			//Get i-th Vamp output descriptor (Borrowed Reference)
 			pyDict = PyList_GET_ITEM(pyList,i);
 			
 			//We only care about dictionaries holding output descriptors
@@ -530,55 +531,58 @@ PyPlugin::getOutputDescriptors() const
 			{		
 				switch (outKeys[PyString_AsString(pyKey)]) 
 				{
-					case not_found : 	
-						cerr << "Unknown key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+					case o::not_found : 	
+						cerr << "Unknown key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 						break;
-					case identifier: 	
+					case o::identifier: 	
 						od.identifier = PyString_AsString(pyValue); 
 						break;				
-					case name: 			
+					case o::name: 			
 						od.name = PyString_AsString(pyValue); 
 						break;
-					case description: 	
+					case o::description: 	
 						od.description = PyString_AsString(pyValue); 
 						break; 								
-					case unit: 			
+					case o::unit: 			
 						od.unit = PyString_AsString(pyValue); 
 						break; 													
-					case hasFixedBinCount:
+					case o::hasFixedBinCount:
 						od.hasFixedBinCount = (bool) PyInt_AS_LONG(pyValue); 
 						break;
-					case binCount:
+					case o::binCount:
 						od.binCount = (size_t) PyInt_AS_LONG(pyValue);
 						break;
-					case binNames:
+					case o::binNames:
 						od.binNames = PyList_To_StringVector(pyValue);
 						break;
-					case hasKnownExtents:
+					case o::hasKnownExtents:
 						od.hasKnownExtents = (bool) PyInt_AS_LONG(pyValue); 
 						break;					
-					case minValue:
+					case o::minValue:
 						od.minValue = (float) PyFloat_AS_DOUBLE(pyValue);
 						break;
-					case maxValue:
+					case o::maxValue:
 						od.maxValue = (float) PyFloat_AS_DOUBLE(pyValue);
 						break;
-					case isQuantized:
+					case o::isQuantized:
 						od.isQuantized = (bool) PyInt_AS_LONG(pyValue); 
 						break;					
-					case quantizeStep:
+					case o::quantizeStep:
 						od.quantizeStep = (float) PyFloat_AS_DOUBLE(pyValue);
 						break;
-					case sampleType: 				
+					case o::sampleType: 				
 						od.sampleType = (OutputDescriptor::SampleType) sampleKeys[PyString_AsString(pyValue)];
 						break;
-					case sampleRate:
+					case o::sampleRate:
 						od.sampleRate = (float) PyFloat_AS_DOUBLE(pyValue);
 //						od.sampleRate = m_inputSampleRate / m_stepSize;
 						cerr << od.sampleRate << endl;
 						break;					
+					case o::hasDuration:
+						od.hasDuration = (bool)PyInt_AS_LONG(pyValue);
+						break;
 					default : 	
-						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 					
 			} // while dict
 			list.push_back(od);
@@ -619,7 +623,7 @@ PyPlugin::getParameterDescriptors() const
 		//Parse Output List
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(pyList); ++i) {
 	
-			//Get i-th VAMP output descriptor (Borrowed Reference)
+			//Get i-th Vamp output descriptor (Borrowed Reference)
 			pyDict = PyList_GET_ITEM(pyList,i);
 			
 			//We only care about dictionaries holding output descriptors
@@ -633,8 +637,8 @@ PyPlugin::getParameterDescriptors() const
 			{		
 				switch (parmKeys[PyString_AsString(pyKey)]) 
 				{
-					case not_found : 	
-						cerr << "Unknown key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+					case p::not_found : 	
+						cerr << "Unknown key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 						break;
 					case p::identifier: 	
 						pd.identifier = PyString_AsString(pyValue); 
@@ -661,7 +665,7 @@ PyPlugin::getParameterDescriptors() const
 						pd.isQuantized = (bool) PyInt_AS_LONG(pyValue); 
 						break;					
 					default : 	
-						cerr << "Invalid key in VAMP OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
+						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 				
 			} // while dict
 			list.push_back(pd);
@@ -892,8 +896,8 @@ PyPlugin::process(const float *const *inputBuffers,
 					emptyFeature = false;
 					switch (ffKeys[PyString_AsString(pyKey)]) 
 					{
-						case not_found : 	
-							cerr << "Unknown key in VAMP FeatureSet: " 
+						case unknown: 	
+							cerr << "Unknown key in Vamp FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 							break;
 						case hasTimestamp: 	
@@ -910,6 +914,20 @@ PyPlugin::process(const float *const *inputBuffers,
 							<< feature.timestamp.toString() << endl;
 #endif
 							break;
+						case hasDuration: 	
+							feature.hasDuration = (bool) PyInt_AS_LONG(pyValue); 
+							break;				
+						case duration: 			
+							feature.duration =  
+							Vamp::RealTime::frame2RealTime(
+							PyLong_AsLong(pyValue), 
+							(unsigned int) m_inputSampleRate );
+#ifdef _DEBUG
+							cerr << "Duration: " 
+							<< (long)PyLong_AsLong(pyValue) << ", ->" 
+							<< feature.duration.toString() << endl;
+#endif
+							break;
 						case values: 	
 							feature.values = PyList_As_FloatVector(pyValue); 
 							break; 								
@@ -917,7 +935,7 @@ PyPlugin::process(const float *const *inputBuffers,
 							feature.label = PyString_AsString(pyValue); 
 							break; 													
 						default : 	
-							cerr << "Invalid key in VAMP FeatureSet: " 
+							cerr << "Invalid key in Vamp FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 					} // switch					
 
@@ -994,8 +1012,8 @@ PyPlugin::getRemainingFeatures()
 					emptyFeature = false;
 					switch (ffKeys[PyString_AsString(pyKey)]) 
 					{
-						case not_found : 	
-							cerr << "Unknown key in VAMP FeatureSet: " 
+						case unknown : 	
+							cerr << "Unknown key in Vamp FeatureSet: " 
 							<< PyString_AsString(pyKey) << endl; 
 							break;
 						case hasTimestamp: 	
@@ -1010,6 +1028,20 @@ PyPlugin::getRemainingFeatures()
 							cerr << "Timestamp: " 
 							<< (long)PyLong_AsLong(pyValue) << ", ->" 
 							<< feature.timestamp.toString() << endl;
+#endif
+							break;
+						case hasDuration: 	
+							feature.hasDuration = (bool) PyInt_AS_LONG(pyValue); 
+							break;				
+						case duration:
+							feature.duration =  
+							Vamp::RealTime::frame2RealTime(
+							PyLong_AsLong(pyValue), 
+							(unsigned int) m_inputSampleRate );
+#ifdef _DEBUG
+							cerr << "Duration: " 
+							<< (long)PyLong_AsLong(pyValue) << ", ->" 
+							<< feature.duration.toString() << endl;
 #endif
 							break;
 						case values: 	
@@ -1034,20 +1066,21 @@ PyPlugin::initMaps() const
 
 	if (isMapInitialised) return true;
 
-	outKeys["identifier"] = identifier;
-	outKeys["name"] = name;
-	outKeys["description"] = description;
-	outKeys["unit"] = unit;
-	outKeys["hasFixedBinCount"] = hasFixedBinCount; 
-	outKeys["binCount"] = binCount;
-	outKeys["binNames"] = binNames;
-	outKeys["hasKnownExtents"] = hasKnownExtents;
-	outKeys["minValue"] = minValue;
-	outKeys["maxValue"] = maxValue;
-	outKeys["isQuantized"] = isQuantized;
-	outKeys["quantizeStep"] = quantizeStep;
-	outKeys["sampleType"] = sampleType;
-	outKeys["sampleRate"] = sampleRate;
+	outKeys["identifier"] = o::identifier;
+	outKeys["name"] = o::name;
+	outKeys["description"] = o::description;
+	outKeys["unit"] = o::unit;
+	outKeys["hasFixedBinCount"] = o::hasFixedBinCount; 
+	outKeys["binCount"] = o::binCount;
+	outKeys["binNames"] = o::binNames;
+	outKeys["hasKnownExtents"] = o::hasKnownExtents;
+	outKeys["minValue"] = o::minValue;
+	outKeys["maxValue"] = o::maxValue;
+	outKeys["isQuantized"] = o::isQuantized;
+	outKeys["quantizeStep"] = o::quantizeStep;
+	outKeys["sampleType"] = o::sampleType;
+	outKeys["sampleRate"] = o::sampleRate;
+	outKeys["hasDuration"] = o::hasDuration;
 
 	sampleKeys["OneSamplePerStep"] = OneSamplePerStep;
 	sampleKeys["FixedSampleRate"] = FixedSampleRate;
@@ -1055,6 +1088,8 @@ PyPlugin::initMaps() const
 
 	ffKeys["hasTimestamp"] = hasTimestamp;
 	ffKeys["timeStamp"] = timeStamp;
+	ffKeys["hasDuration"] = hasDuration;
+	ffKeys["duration"] = duration;
 	ffKeys["values"] = values;
 	ffKeys["label"] = label;
 

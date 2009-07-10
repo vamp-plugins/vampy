@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
     Vamp
 
@@ -45,6 +46,7 @@
 #include "Mutex.h"
 
 //fields in OutputDescriptor
+namespace o {
 enum eOutDescriptors {
 	not_found,
 	identifier,
@@ -61,8 +63,10 @@ enum eOutDescriptors {
 	quantizeStep,
 	sampleType,	
 	sampleRate,
+	hasDuration,
 	endNode
 	}; 
+}
 
 namespace p {
 enum eParmDescriptors {
@@ -88,6 +92,8 @@ enum eFeatureFields {
 	unknown,
 	hasTimestamp,
 	timeStamp,
+	hasDuration,
+	duration,
 	values,
 	label
 	};
@@ -101,11 +107,11 @@ enum eProcessType {
 class PyPlugin : public Vamp::Plugin
 {
 public:
-    PyPlugin(std::string plugin,float inputSampleRate, PyObject *pyInstance);
-    virtual ~PyPlugin();
+	PyPlugin(std::string plugin,float inputSampleRate, PyObject *pyInstance);
+	virtual ~PyPlugin();
 
-    bool initialise(size_t channels, size_t stepSize, size_t blockSize);
-    void reset();
+	bool initialise(size_t channels, size_t stepSize, size_t blockSize);
+	void reset();
 
 	InputDomain getInputDomain() const;
 	size_t getPreferredBlockSize() const;
@@ -113,28 +119,28 @@ public:
 	size_t getMinChannelCount() const; 
 	size_t getMaxChannelCount() const;
 
-    std::string getIdentifier() const;
-    std::string getName() const;
-    std::string getDescription() const;
-    std::string getMaker() const;
-    int getPluginVersion() const;
-    std::string getCopyright() const;
- 
-    OutputList getOutputDescriptors() const;
-    ParameterList getParameterDescriptors() const;
+	std::string getIdentifier() const;
+	std::string getName() const;
+	std::string getDescription() const;
+	std::string getMaker() const;
+	int getPluginVersion() const;
+	std::string getCopyright() const;
+	
+	OutputList getOutputDescriptors() const;
+	ParameterList getParameterDescriptors() const;
 	float getParameter(std::string paramid) const;
 	void setParameter(std::string paramid, float newval);
     
-FeatureSet process(const float *const *inputBuffers,
-                       Vamp::RealTime timestamp);
+	FeatureSet process(const float *const *inputBuffers,
+			   Vamp::RealTime timestamp);
 
-    FeatureSet getRemainingFeatures();
+	FeatureSet getRemainingFeatures();
 
 protected:
 	PyObject *m_pyInstance;
-    size_t m_stepSize;
-    size_t m_blockSize;
-    size_t m_channels;
+	size_t m_stepSize;
+	size_t m_blockSize;
+	size_t m_channels;
 	std::string m_plugin;
 	std::string m_class;
 	std::string m_path;
