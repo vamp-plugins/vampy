@@ -106,18 +106,21 @@ static bool haveScannedPlugins = false;
 
 static bool tryPreload(string name)
 {
-//    cerr << "Trying to load Python interpreter library \"" << name << "\"...";
-    void *lib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    cerr << "Trying to load Python interpreter library \"" << name << "\"...";
+#ifdef _WIN32
+    void *lib = LoadLibrary(name.c_str());
     if (!lib) {
-//        char *err = dlerror();
-//        if (err && err[0]) {
-//            cerr << " failed (" << err << ")" << endl;
-//        } else {
-//            cerr << " failed" << endl;
-//        }
+        cerr << " failed" << endl;
         return false;
     }
-//    cerr << " succeeded" << endl;
+#else
+    void *lib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    if (!lib) {
+        cerr << " failed" << endl;
+        return false;
+    }
+#endif
+    cerr << " succeeded" << endl;
     return true;
 }
 
