@@ -126,7 +126,10 @@ static bool tryPreload(string name)
 
 static bool preloadPython()
 {
-    // useless on Windows
+#ifdef _WIN32
+    // this doesn't seem to be necessary at all on Windows
+    return true;
+#endif
 
     string pyver = Py_GetVersion();
     int dots = 2;
