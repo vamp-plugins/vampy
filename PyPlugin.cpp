@@ -663,7 +663,9 @@ PyPlugin::getParameterDescriptors() const
 						break;
 					case p::isQuantized:
 						pd.isQuantized = (bool) PyInt_AS_LONG(pyValue); 
-						break;					
+						break;									case p::quantizeStep:
+						pd.quantizeStep = (float) PyFloat_AS_DOUBLE(pyValue);
+						break;
 					default : 	
 						cerr << "Invalid key in Vamp OutputDescriptor: " << PyString_AsString(pyKey) << endl; 
 				} 				
@@ -1101,6 +1103,7 @@ PyPlugin::initMaps() const
 	parmKeys["maxValue"] = p::maxValue;
 	parmKeys["defaultValue"] = p::defaultValue;
 	parmKeys["isQuantized"] = p::isQuantized;
+	parmKeys["quantizeStep"] = p::quantizeStep;
 
 	isMapInitialised = true;
 	return true;
