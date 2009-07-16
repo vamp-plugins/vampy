@@ -9,7 +9,7 @@ class PyZeroCrossing:
 		self.m_blockSize = 0
 		self.m_channels = 0
 		self.previousSample = 0.0
-		self.threshold = 0.01
+		self.threshold = 0.005
 		
 	def initialise(self,channels,stepSize,blockSize,inputSampleRate):
 		self.m_channels = channels

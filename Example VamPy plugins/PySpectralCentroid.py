@@ -11,7 +11,7 @@ class PySpectralCentroid:
 		self.m_blockSize = 0
 		self.m_channels = 0
 		self.previousSample = 0.0
-		self.threshold = 0.00
+		self.threshold = 0.05
 		
 	def initialise(self,channels,stepSize,blockSize,inputSampleRate):
 		self.m_channels = channels
