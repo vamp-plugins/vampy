@@ -75,12 +75,12 @@ static std::map<std::string, p::eParmDescriptors> parmKeys;
 Mutex PyPlugin::m_pythonInterpreterMutex;
 static bool isMapInitialised = false;
 
-PyPlugin::PyPlugin(std::string pluginKey,float inputSampleRate, PyObject *pyInstance) :
-    Plugin(inputSampleRate),
-	m_pyInstance(pyInstance),
+PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyClass) :
+	Plugin(inputSampleRate),
+	m_pyClass(pyClass),
 	m_stepSize(0),
 	m_blockSize(0),
-    m_channels(0),
+	m_channels(0),
 	m_plugin(pluginKey),
 	m_class(pluginKey.substr(pluginKey.rfind(':')+1,pluginKey.size()-1)),
 	m_path((pluginKey.substr(0,pluginKey.rfind(pathsep)))),
@@ -88,14 +88,29 @@ PyPlugin::PyPlugin(std::string pluginKey,float inputSampleRate, PyObject *pyInst
 	m_pyProcess(NULL),
 	m_inputDomain(TimeDomain)
 {	
+	// Create an instance
+	PyObject *pyInputSampleRate = PyFloat_FromDouble(inputSampleRate);
+	PyObject *args = PyTuple_Pack(1, pyInputSampleRate);
+
+	m_pyInstance = PyObject_CallObject(m_pyClass, args);
+
+	if (!m_pyInstance) {
+		cerr << "PyPlugin::PyPlugin: Failed to create Python plugin instance for key \"" << pluginKey << "\" (is the 1-arg class constructor from sample rate correctly provided?)" << endl;
+		throw std::string("Constructor failed");
+	}
+	
+	Py_DECREF(args);
+	Py_DECREF(pyInputSampleRate);
 }
 
 PyPlugin::~PyPlugin()
 {
+	if (m_pyInstance) Py_DECREF(m_pyInstance);
+
 	Py_CLEAR(m_pyProcess);
 #ifdef _DEBUG
 	cerr << "PyPlugin::PyPlugin:" << m_class 
-	<< " Instance deleted." << endl;
+	     << " Instance deleted." << endl;
 #endif
 }
 
@@ -222,7 +237,9 @@ PyPlugin::getMaker() const
 int
 PyPlugin::getPluginVersion() const
 {
-    return 2;
+	//!!! implement
+
+	return 2;
 }
 
 string
@@ -252,7 +269,8 @@ PyPlugin::getCopyright() const
 		rString=PyString_AsString(pyString);
 		Py_CLEAR(pyString);
 	}
-    return rString;
+
+	return rString;
 }
 
 
@@ -264,8 +282,8 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 	cerr << "[call] " << method << endl;
 	
 	//placing Mutex before these calls causes deadlock
-    if (channels < getMinChannelCount() ||
-	channels > getMaxChannelCount()) return false;
+	if (channels < getMinChannelCount() ||
+	    channels > getMaxChannelCount()) return false;
 	
 	m_inputDomain = getInputDomain();
 
@@ -300,45 +318,42 @@ PyPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 		m_processType = not_implemented;
 		m_pyProcess = NULL;		
 		cerr << "Warning: Python plugin [" << m_class << "::" << method 
-		<< "] No process implementation found. Plugin will do nothing." << endl;
+		     << "] No process implementation found. Plugin will do nothing." << endl;
 	}
 
-	
-		//Check if the method is implemented in Python else return false
-		if (PyObject_HasAttrString(m_pyInstance,method)) {
+	//Check if the method is implemented in Python else return false
+	if (PyObject_HasAttrString(m_pyInstance,method)) {
    			
-			PyObject *pyMethod = PyString_FromString(method);
-			PyObject *pyChannels = PyInt_FromSsize_t((Py_ssize_t)channels);
-			PyObject *pyStepSize = PyInt_FromSsize_t((Py_ssize_t)m_stepSize);
-			PyObject *pyBlockSize = PyInt_FromSsize_t((Py_ssize_t)blockSize);
-			PyObject *pyInputSampleRate = PyFloat_FromDouble((double)m_inputSampleRate);
-			
-			//Call the method
-			PyObject *pyBool = 
-			PyObject_CallMethodObjArgs(m_pyInstance,pyMethod,pyChannels,pyStepSize,pyBlockSize,pyInputSampleRate,NULL);
+		PyObject *pyMethod = PyString_FromString(method);
+		PyObject *pyChannels = PyInt_FromSsize_t((Py_ssize_t)channels);
+		PyObject *pyStepSize = PyInt_FromSsize_t((Py_ssize_t)m_stepSize);
+		PyObject *pyBlockSize = PyInt_FromSsize_t((Py_ssize_t)blockSize);
+		//Call the method
+		PyObject *pyBool = 
+			PyObject_CallMethodObjArgs(m_pyInstance,pyMethod,pyChannels,pyStepSize,pyBlockSize,NULL);
 						
-			Py_DECREF(pyMethod);
-			Py_DECREF(pyChannels);
-			Py_DECREF(pyStepSize);
-			Py_DECREF(pyBlockSize);
-			Py_DECREF(pyInputSampleRate);
+		Py_DECREF(pyMethod);
+		Py_DECREF(pyChannels);
+		Py_DECREF(pyStepSize);
+		Py_DECREF(pyBlockSize);
 
-			//Check return value
-			if (PyErr_Occurred() || !PyBool_Check(pyBool)) {
-				PyErr_Print(); PyErr_Clear();
-				Py_CLEAR(pyBool);
-				cerr << "ERROR: In Python plugin [" << m_class << "::" << method 
-				<< "] Expected Bool return value." << endl;
-				return false;
-			}
-
-			if (pyBool == Py_True) {  
-				Py_CLEAR(pyBool); 
-				return true;
-			} else {
-				Py_CLEAR(pyBool); 
-				return false;}								
-		} 
+		//Check return value
+		if (PyErr_Occurred() || !PyBool_Check(pyBool)) {
+			PyErr_Print(); PyErr_Clear();
+			Py_CLEAR(pyBool);
+			cerr << "ERROR: In Python plugin [" << m_class << "::" << method 
+			     << "] Expected Bool return value." << endl;
+			return false;
+		}
+		
+		if (pyBool == Py_True) {  
+			Py_CLEAR(pyBool); 
+			return true;
+		} else {
+			Py_CLEAR(pyBool); 
+			return false;
+		}
+	} 
     	return false;
 }
 

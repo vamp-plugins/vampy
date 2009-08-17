@@ -62,7 +62,7 @@ PyPlugScanner::getPyPlugs()
 	
 	vector<string> pyPlugs;
 	string pluginKey;
-	PyObject *pyClassInstance;
+	PyObject *pyClass;
 	
     for (size_t i = 0; i < m_path.size(); ++i) {
         
@@ -74,13 +74,13 @@ PyPlugScanner::getPyPlugs()
 				if (!script.empty()) {					
 					string classname=script.substr(0,script.rfind('.'));
 					pluginKey=joinPath(m_path[i],script)+":"+classname;
-					pyClassInstance = getScriptInstance(m_path[i],classname);
-					if (pyClassInstance == NULL) 
+					pyClass = getScriptClass(m_path[i],classname);
+					if (pyClass == NULL) 
 					cerr << "Warning: Syntax error in VamPy plugin:  " 
-					<< classname << ". Avoiding plugin." << endl;
+					     << classname << ". Avoiding plugin." << endl;
 					else { 
 							pyPlugs.push_back(pluginKey);
-							m_pyInstances.push_back(pyClassInstance);
+							m_pyClasses.push_back(pyClass);
 						}
 					//pyPlugs.push_back(pluginKey);
 				}
@@ -92,11 +92,11 @@ return pyPlugs;
 }
 
 
-//For now return one class instance found in each script
+//For now return one class object found in each script
 vector<PyObject*> 
-PyPlugScanner::getPyInstances()
+PyPlugScanner::getPyClasses()
 {
-return m_pyInstances;	
+return m_pyClasses;	
 
 }
 
@@ -104,7 +104,7 @@ return m_pyInstances;
 //Validate
 //This should not be called more than once!
 PyObject* 
-PyPlugScanner::getScriptInstance(string path, string classname)
+PyPlugScanner::getScriptClass(string path, string classname)
 {
 
 	//Add plugin path to active Python Path 
@@ -136,10 +136,7 @@ PyPlugScanner::getScriptInstance(string path, string classname)
 	//Check if class is present and a callable method is implemented
 	if (pyClass && PyCallable_Check(pyClass)) {
 
-		//Create an instance
-		PyObject *pyInstance = PyObject_CallObject(pyClass, NULL);
-		//cerr << "__(getInstance) PyPlugin Class: " << m_class << " successfully created.__" << endl;
-		return pyInstance; 
+	    return pyClass;
 	}	
 	else {
 		cerr << "ERROR: callable plugin class could not be found in source: " << classname << endl 

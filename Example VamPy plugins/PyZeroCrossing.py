@@ -1,21 +1,24 @@
 '''PyZeroCrossing.py - Example plugin demonstrates''' 
 '''how to call a python class using the VamPy Vamp plugin'''
 
+from random import *
+
 class PyZeroCrossing: 
 	
-	def __init__(self): 
-		self.m_imputSampleRate = 0.0 
+	def __init__(self,inputSampleRate): 
+		self.m_inputSampleRate = inputSampleRate 
 		self.m_stepSize = 0
 		self.m_blockSize = 0
 		self.m_channels = 0
 		self.previousSample = 0.0
 		self.threshold = 0.005
+		self.identity = random()
+		self.counter = 0
 		
-	def initialise(self,channels,stepSize,blockSize,inputSampleRate):
+	def initialise(self,channels,stepSize,blockSize):
 		self.m_channels = channels
 		self.m_stepSize = stepSize		
 		self.m_blockSize = blockSize
-		self.m_inputSampleRate = inputSampleRate
 		return True
 	
 	def getMaker(self):
@@ -70,8 +73,8 @@ class PyZeroCrossing:
 	def getParameterDescriptors(self):
 		paramlist1={
 		'identifier':'threshold',
-		'name':'Noise threshold: ',
-		'description':'Return null or delete this function if not needed.',
+		'name':'Noise threshold',
+		'description':'',
 		'unit':'v',
 		'minValue':0.0,
 		'maxValue':0.5,
@@ -96,6 +99,9 @@ class PyZeroCrossing:
 		prev = self.previousSample
 		count = 0.0;
 		channel = inbuf[0]
+
+		print "Identity ", self.identity, ", counter ", self.counter
+		self.counter = self.counter + 1
 
 		#we have two outputs defined thus we have to declare
 		#them as empty dictionaries in our output list

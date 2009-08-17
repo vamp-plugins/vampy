@@ -5,19 +5,18 @@ from numpy import *
 
 class PySpectralFeatures: 
 	
-	def __init__(self): 
-		self.m_imputSampleRate = 0.0 
+	def __init__(self,inputSampleRate): 
+		self.m_inputSampleRate = inputSampleRate
 		self.m_stepSize = 0
 		self.m_blockSize = 0
 		self.m_channels = 0
 		self.threshold = 0.00
 		self.r = 2.0
 		
-	def initialise(self,channels,stepSize,blockSize,inputSampleRate):
+	def initialise(self,channels,stepSize,blockSize):
 		self.m_channels = channels
 		self.m_stepSize = stepSize		
 		self.m_blockSize = blockSize
-		self.m_inputSampleRate = inputSampleRate
 		#self.prevMag = ones((blockSize/2)-1) / ((blockSize/2)-1)
 		self.prevMag = zeros((blockSize/2)-1)
 		self.prevMag[0] = 1

@@ -54,19 +54,19 @@ public:
 	~PyPlugScanner() { m_hasInstance = false; }
 	static PyPlugScanner *getInstance();	
 	std::vector<std::string> getPyPlugs();
-	std::vector<PyObject*> getPyInstances();
+	std::vector<PyObject*> getPyClasses();
 	void setPath(std::vector<std::string> path);
 	std::vector<std::string> getAllValidPath();
 	
 protected:
 	PyPlugScanner();
-	PyObject *getScriptInstance(std::string path, std::string classname);
+	PyObject *getScriptClass(std::string path, std::string classname);
 	std::vector<std::string> listFiles(std::string dir, std::string ext);
 	static bool m_hasInstance;
 	static PyPlugScanner *m_instance;
 	std::string m_dir;
 	std::vector<std::string> m_path; 
-	std::vector<PyObject*> m_pyInstances;
+	std::vector<PyObject*> m_pyClasses;
 };
 
 #endif	

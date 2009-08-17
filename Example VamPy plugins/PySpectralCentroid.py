@@ -5,19 +5,18 @@ from numpy import *
 
 class PySpectralCentroid: 
 	
-	def __init__(self): 
-		self.m_imputSampleRate = 0.0 
+	def __init__(self,inputSampleRate): 
+		self.m_inputSampleRate = inputSampleRate
 		self.m_stepSize = 0
 		self.m_blockSize = 0
 		self.m_channels = 0
 		self.previousSample = 0.0
 		self.threshold = 0.05
 		
-	def initialise(self,channels,stepSize,blockSize,inputSampleRate):
+	def initialise(self,channels,stepSize,blockSize):
 		self.m_channels = channels
 		self.m_stepSize = stepSize		
 		self.m_blockSize = blockSize
-		self.m_inputSampleRate = inputSampleRate
 		return True
 	
 	def getMaker(self):

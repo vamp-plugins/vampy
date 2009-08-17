@@ -108,7 +108,7 @@ enum eProcessType {
 class PyPlugin : public Vamp::Plugin
 {
 public:
-	PyPlugin(std::string plugin,float inputSampleRate, PyObject *pyInstance);
+	PyPlugin(std::string plugin,float inputSampleRate, PyObject *pyClass);
 	virtual ~PyPlugin();
 
 	bool initialise(size_t channels, size_t stepSize, size_t blockSize);
@@ -138,6 +138,7 @@ public:
 	FeatureSet getRemainingFeatures();
 
 protected:
+	PyObject *m_pyClass;
 	PyObject *m_pyInstance;
 	size_t m_stepSize;
 	size_t m_blockSize;
