@@ -141,7 +141,25 @@ static bool preloadPython()
         
     return false;
 }
-    
+
+/* This doesn't work: don't try it again.
+static bool initPython()
+{
+	// preloadPython();
+	Py_Initialize();
+#ifndef _WIN32
+	//set dlopen flags form Python 
+	string pyCmd = "from sys import setdlopenflags\nimport dl\nsetdlopenflags(dl.RTLD_NOW|dl.RTLD_GLOBAL)\n";
+	if (PyRun_SimpleString(pyCmd.c_str()) == -1) 
+	{   
+	    cerr << "Warning: Could not set dlopen flasgs. Dynamic loading in scripts will fail." << endl;
+		return false;
+	}
+#endif	
+	PyEval_InitThreads();			
+	return Py_IsInitialized();
+}    
+*/
 
 const VampPluginDescriptor 
 *vampGetPluginDescriptor(unsigned int version,unsigned int index)
@@ -154,33 +172,15 @@ const VampPluginDescriptor
 
 	if (!haveScannedPlugins) {
 
-		if (!isPythonInitialized) {
+		if (!isPythonInitialized){
 
-			if (!preloadPython()) {
-                            cerr << "Warning: Could not preload Python." 
-                                 << " Dynamic loading in scripts will fail." << endl;
-                        }
-
-/*
-			void *pylib = 0; 
-			
-			cerr << "Loading Python Interpreter at: " << pythonPath << endl;
-			//Preloading the binary allows the load of shared libs 
-			//TODO: check how to do RTLD_NOW on Windows
-#ifdef _WIN32
-			pylib = LoadLibrary(pythonPath.c_str());
-#else			
-			pylib = dlopen(pythonPath.c_str(), RTLD_NOW|RTLD_GLOBAL);
-#endif			
-			if (!pylib) cerr << "Warning: Could not preload Python." 
-						<< " Dynamic loading in scripts will fail." << endl;
-*/
+			if (!preloadPython())
+				cerr << "Warning: Could not preload Python. Dynamic loading in scripts will fail." << endl;
 			Py_Initialize();
-                        cerr << "# isPythonInitialized after initialize: " << Py_IsInitialized() << endl;
-	 		PyEval_InitThreads();			
-		} else {
-			//Py_InitializeEx(1);
+		    cerr << "# isPythonInitialized after initialize: " << Py_IsInitialized() << endl;
+			// PyEval_InitThreads(); //not sure why this was needed
 		}
+
 
 		vector<string> pyPlugs;
 		vector<string> pyPath;
