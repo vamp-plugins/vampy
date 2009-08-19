@@ -10,18 +10,23 @@ class PySpectralFeatures:
 		self.m_stepSize = 0
 		self.m_blockSize = 0
 		self.m_channels = 0
-		self.threshold = 0.00
+		self.threshold = 0.05
 		self.r = 2.0
+		return None
 		
 	def initialise(self,channels,stepSize,blockSize):
 		self.m_channels = channels
 		self.m_stepSize = stepSize		
 		self.m_blockSize = blockSize
-		#self.prevMag = ones((blockSize/2)-1) / ((blockSize/2)-1)
 		self.prevMag = zeros((blockSize/2)-1)
 		self.prevMag[0] = 1
-
 		return True
+		
+	def reset(self):
+		# reset any initial conditions
+		self.prevMag = zeros((self.m_blockSize/2)-1)
+		self.prevMag[0] = 1
+		return None
 	
 	def getMaker(self):
 		return 'VamPy Example Plugins'
@@ -109,7 +114,7 @@ class PySpectralFeatures:
 		threshold={
 		'identifier':'threshold',
 		'name':'Noise threshold: ',
-		'description':'',
+		'description':'Noise threshold',
 		'unit':'v',
 		'minValue':0.0,
 		'maxValue':0.5,
@@ -120,11 +125,11 @@ class PySpectralFeatures:
 		renyicoeff={
 		'identifier':'r',
 		'name':'Renyi entropy coeff: ',
-		'description':'',
+		'description':'Renyi entropy coeff',
 		'unit':'',
 		'minValue':0.0,
 		'maxValue':10.0,
-		'defaultValue':2,
+		'defaultValue':2.0,
 		'isQuantized':False		
 		}
 
@@ -151,8 +156,10 @@ class PySpectralFeatures:
 
 		#for time domain plugins use the following line:
 		#audioSamples = frombuffer(membuffer[0],float32)
-		#-1: do till the end, skip DC 2*32bit / 8bit = 8byte
+		#for frequency domain plugins use the following line:
 		complexSpectrum =  frombuffer(membuffer[0],complex64,-1,8)
+		#meaning of the parameters above:
+		#-1: do until the end, skip DC 2*32bit / 8bit = 8byte
 		magnitudeSpectrum = abs(complexSpectrum) / (fftsize/2)
 		tpower = sum(magnitudeSpectrum)
 		#phaseSpectrum = angle(complexSpectrum)
@@ -165,11 +172,8 @@ class PySpectralFeatures:
 		bw = 0.0
 		shannon = 0.0
 		renyi = 0.0
-		r = self.r
 		KLdiv = 0.0
-		flatness = 0.0
 		exp=1.0 / (fftsize/2)
-		#print exp
 
 		#declare outputs
 		output0=[]
@@ -184,11 +188,9 @@ class PySpectralFeatures:
 			centroid = sum(freq * magnitudeSpectrum) / tpower 
 			crest = max(magnitudeSpectrum)  / tpower
 			bw = sum( abs(freq - centroid) * magnitudeSpectrum ) / tpower
-			#flatness = prod(abs(complexSpectrum))  
-			#print flatness
 			normMag = magnitudeSpectrum / tpower #make it sum to 1			
 			shannon = - sum( normMag * log2(normMag) )
-			renyi = (1/1-r) * log10( sum( power(normMag,r)))
+			renyi = (1/1-self.r) * log10( sum( power(normMag,self.r)))
 			KLdiv = sum( normMag * log2(normMag / self.prevMag) )
 			self.prevMag = normMag
  				
@@ -230,3 +232,4 @@ class PySpectralFeatures:
 
 		#return a LIST of list of dictionaries
 		return [output0,output1,output2,output3,output4,output5]
+		

@@ -181,7 +181,6 @@ const VampPluginDescriptor
 			// PyEval_InitThreads(); //not sure why this was needed
 		}
 
-
 		vector<string> pyPlugs;
 		vector<string> pyPath;
 		vector<PyObject *> pyClasses;
