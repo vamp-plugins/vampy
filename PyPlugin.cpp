@@ -89,25 +89,31 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
 	m_inputDomain(TimeDomain)
 {	
 	// Create an instance
+	MutexLocker locker(&m_pythonInterpreterMutex);
+	Py_INCREF(m_pyClass);
 	PyObject *pyInputSampleRate = PyFloat_FromDouble(inputSampleRate);
 	PyObject *args = PyTuple_Pack(1, pyInputSampleRate);
-
-	m_pyInstance = PyObject_CallObject(m_pyClass, args);
-
-	if (!m_pyInstance) {
+	m_pyInstance = PyObject_Call(m_pyClass, args, NULL);
+	
+	if (!m_pyInstance || PyErr_Occurred()) { 
+		if (PyErr_Occurred()) { PyErr_Print(); PyErr_Clear(); }
+		Py_CLEAR(args);
+		Py_CLEAR(pyInputSampleRate);
 		cerr << "PyPlugin::PyPlugin: Failed to create Python plugin instance for key \"" << pluginKey << "\" (is the 1-arg class constructor from sample rate correctly provided?)" << endl;
 		throw std::string("Constructor failed");
 	}
-	
+	Py_INCREF(m_pyInstance);
 	Py_DECREF(args);
 	Py_DECREF(pyInputSampleRate);
+
 }
 
 PyPlugin::~PyPlugin()
 {
 	if (m_pyInstance) Py_DECREF(m_pyInstance);
+	if (m_pyClass) Py_DECREF(m_pyClass);
+	if (m_pyProcess) Py_CLEAR(m_pyProcess);
 
-	Py_CLEAR(m_pyProcess);
 #ifdef _DEBUG
 	cerr << "PyPlugin::PyPlugin:" << m_class 
 	     << " Instance deleted." << endl;
@@ -615,6 +621,8 @@ PyPlugin::getParameterDescriptors() const
 	ParameterDescriptor pd;
 	char method[]="getParameterDescriptors";
 	cerr << "[call] " << method << endl;
+	
+	if (!m_pyInstance) {cerr << "Error: pyInstance is NULL" << endl; return list;}
 
 	//Check if the method is implemented in Python
 	if ( ! PyObject_HasAttrString(m_pyInstance,method) ) return list;
@@ -678,7 +686,8 @@ PyPlugin::getParameterDescriptors() const
 						break;
 					case p::isQuantized:
 						pd.isQuantized = (bool) PyInt_AS_LONG(pyValue); 
-						break;									case p::quantizeStep:
+						break;									
+					case p::quantizeStep:
 						pd.quantizeStep = (float) PyFloat_AS_DOUBLE(pyValue);
 						break;
 					default : 	
