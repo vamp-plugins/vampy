@@ -1,9 +1,18 @@
 
-CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 
-#-fvisibility=hidden
+CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 #-I../host/pyRealTime.h #-fvisibility=hidden
+LDFLAGS		:= -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
 
-vampy.dylib:	PyPlugin.o PyPlugScanner.o pyvamp-main.o Mutex.o
-	g++ -shared $^ -o $@ -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
+all: vampy.dylib
+
+PyExtensionModule.a: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
+	libtool -static $^ -o $@ 
+
+# The standard python extension is .so (even on the Mac)
+PyExtensionModule.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
+	g++ -shared $^ -o $@ $(LDFLAGS) 
+
+vampy.dylib:	PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a
+	g++ -shared $^ -o $@ $(LDFLAGS) 
 
 # Install plugin
 #
@@ -24,5 +33,6 @@ cleanplug : clean
 
 clean:	
 	rm *.o
+	rm *.a
 	rm *$(PLUGIN_EXT)
 	

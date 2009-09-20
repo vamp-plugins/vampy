@@ -11,6 +11,9 @@
 #include "vamp-sdk/PluginAdapter.h"
 #include "PyPlugScanner.h"
 #include "PyPlugin.h"
+// #include "host/pyRealTime.h"
+#include "PyExtensionModule.h"
+
 
 #ifdef _WIN32
 #define pathsep ('\\')
@@ -27,8 +30,10 @@ using std::endl;
 using std::string;
 using std::vector;
 
+
 //volatile bool mutex = false;
 static int adinstcount;
+static int totinstcount;
 
 class PyPluginAdapter : public Vamp::PluginAdapterBase
 {
@@ -51,8 +56,8 @@ protected:
     Vamp::Plugin *createPlugin(float inputSampleRate)
     {
         try {
-            PyPlugin *plugin = new PyPlugin(m_plug, inputSampleRate, m_pyClass);
-            m_instanceCount++;
+            PyPlugin *plugin = new PyPlugin(m_plug, inputSampleRate, m_pyClass, totinstcount);
+            // m_instanceCount++; /// do this in the ctors
             return plugin;
         } catch (...) {
             cerr << "PyPluginAdapter::createPlugin: Failed to construct PyPlugin" << endl;
@@ -69,6 +74,7 @@ protected:
 
 static std::vector<PyPluginAdapter *> adapters;
 static bool haveScannedPlugins = false;
+static bool haveVampyInitialised = false;
 
 static bool tryPreload(string name)
 {
@@ -176,7 +182,18 @@ const VampPluginDescriptor
 
 			if (!preloadPython())
 				cerr << "Warning: Could not preload Python. Dynamic loading in scripts will fail." << endl;
+			
+			int ext = PyImport_AppendInittab("vampy",initvampy);
+			if (ext == -1) cerr << "Extension unsuccessful." << endl;
+			else cerr << "Extension successful." << endl;
 			Py_Initialize();
+			initvampy();
+			// if (!PyImport_ImportModule("vampy"))
+			// 	cerr << "Could not import extension." << endl;
+
+			// Py_InitModule("vampy", VampyMethods);
+			
+			// initpyRealTime();
 		    cerr << "# isPythonInitialized after initialize: " << Py_IsInitialized() << endl;
 			// PyEval_InitThreads(); //not sure why this was needed
 		}
@@ -195,15 +212,22 @@ const VampPluginDescriptor
 		scanner->setPath(pyPath);
 		pyPlugs = scanner->getPyPlugs();
 		cerr << "Found " << pyPlugs.size() << " Scripts ...OK" << endl;
-		//TODO: this will support multiple classes per script
+		//TODO: this should support multiple classes per script (?)
 		pyClasses = scanner->getPyClasses();
 		cerr << "Found " << pyClasses.size() << " Classes ...OK" << endl;
 
 		for (size_t i = 0; i < pyPlugs.size(); ++i) {
 			adapters.push_back( new PyPluginAdapter(pyPlugs[i],pyClasses[i]));
 		} 
-		haveScannedPlugins=true;		
-		
+		haveScannedPlugins=true;
+		// if (!haveVampyInitialised) {
+		// 	// PyImport_AddModule("vampy");
+		// 	// if (!PyImport_ImportModule("vampy")) 
+		// 	cerr << "Could not import extension." << endl;
+		// 	initvampy();
+		// 	haveVampyInitialised = true;
+		// 	cerr << "Extension initialised from main." << endl;
+		// }
 	}
 
 	cerr << "Accessing adapter index: " << index << " (adapters: " << adapters.size() << ")" << endl;
