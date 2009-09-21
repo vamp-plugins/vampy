@@ -7,13 +7,15 @@ mainly using Py/C API macros.
 
 #ifndef _PY_TYPE_INTERFACE_H_
 #define _PY_TYPE_INTERFACE_H_
-
-#include "vamp-sdk/Plugin.h"
 #include <Python.h>
+#ifdef HAVE_NUMPY
+#include "arrayobject.h"
+#endif
 #include "PyExtensionModule.h"
 #include <vector>
 #include <queue>
 #include <string>
+#include "vamp-sdk/Plugin.h"
 //#include <typeinfo>
 
 
@@ -73,24 +75,6 @@ enum eFeatureFields {
 	label
 	};
 
-
-/// sutructure of NumPy array interface:
-/// this is all we need to support numpy without direct dependency
-typedef struct {
-    int two;              /* contains the integer 2 -- simple sanity check */
-    int nd;               /* number of dimensions */
-    char typekind;        /* kind in array --- character code of typestr */
-    int itemsize;         /* size of each element */
-    int flags;            /* flags indicating how the data should be interpreted */
-                          /*   must set ARR_HAS_DESCR bit to validate descr */
-    Py_intptr_t *shape;   /* A length-nd array of shape information */
-    Py_intptr_t *strides; /* A length-nd array of stride information */
-    void *data;           /* A pointer to the first element of the array */
-    PyObject *descr;      /* NULL or data-description (same as descr key */
-                          /*        of __array_interface__) -- must set ARR_HAS_DESCR */
-                          /*        flag or this will be ignored. */
-} PyArrayInterface;
-
 /* C++ mapping of PyNone Type*/
 typedef struct NoneType {};
 
@@ -138,15 +122,18 @@ public:
 	// Sequence types
 	std::vector<std::string> PyValue_To_StringVector (PyObject*) const;
 	std::vector<float> PyValue_To_FloatVector (PyObject*) const;
+	std::vector<float> PyList_To_FloatVector (PyObject*) const;
 
 	// Numpy types
-	float* getNumPyObjectData(PyObject *object, int &length) const; 
+#ifdef HAVE_NUMPY
+	std::vector<float> PyArray_To_FloatVector (PyObject *pyValue) const;
+#endif	
 	
 
 /* 						Template functions 							*/
 
 
-	/// Common wrappers to set a value in one of these structs. (to be used in template functions)
+	/// Common wrappers to set values in Vamp API structs. (to be used in template functions)
 	void SetValue(Vamp::Plugin::OutputDescriptor& od, std::string& key, PyObject* pyValue) const;
 	void SetValue(Vamp::Plugin::ParameterDescriptor& od, std::string& key, PyObject* pyValue) const;
 	bool SetValue(Vamp::Plugin::Feature& od, std::string& key, PyObject* pyValue) const;
@@ -225,6 +212,20 @@ public:
 		return list;
 	}
 
+	/// Convert DTYPE type 1D NumpyArray to std::vector<RET>
+	template<typename RET, typename DTYPE>
+	std::vector<RET> PyTypeInterface::PyArray_Convert(char* raw_data_ptr, long length) const
+	{
+		std::vector<RET> rValue;
+		DTYPE* data = (DTYPE*) raw_data_ptr;
+		for (long i = 0; i<length; ++i){
+#ifdef _DEBUG
+			cerr << "value: " << (RET)data[i] << endl;
+#endif
+			rValue.push_back((RET)data[i]);
+		}
+		return rValue;
+	}
 	
 	//Vamp specific types
 
@@ -253,7 +254,7 @@ public:
 	/*used by templates where we expect no return value, if there is one it will be ignored*/			
 	inline void PyValue_To_rValue(PyObject *pyValue, NoneType &defValue) const
 		{ if (m_strict && pyValue != Py_None) 
-				setValueError("Strict conversion error: expected 'None' type.",m_strict); 
+				setValueError("Strict conversion error: Expected 'None' type.",m_strict); 
 		}
 
 	/* convert sequence types to Vamp List types */			
@@ -301,4 +302,90 @@ public:
 
 };
 
+#ifdef NUMPY_REFERENCE
+/// This should be all we need to compile without direct dependency,
+/// but we don't do that. (it may not work on some platforms)
+typedef struct {
+    int two;              /* contains the integer 2 -- simple sanity check */
+    int nd;               /* number of dimensions */
+    char typekind;        /* kind in array --- character code of typestr */
+    int itemsize;         /* size of each element */
+    int flags;            /* flags indicating how the data should be interpreted */
+                          /*   must set ARR_HAS_DESCR bit to validate descr */
+    Py_intptr_t *shape;   /* A length-nd array of shape information */
+    Py_intptr_t *strides; /* A length-nd array of stride information */
+    void *data;           /* A pointer to the first element of the array */
+    PyObject *descr;      /* NULL or data-description (same as descr key */
+                          /*        of __array_interface__) -- must set ARR_HAS_DESCR */
+                          /*        flag or this will be ignored. */
+} PyArrayInterface;
+
+typedef struct PyArrayObject {
+        PyObject_HEAD
+        char *data;             /* pointer to raw data buffer */
+        int nd;                 /* number of dimensions, also called ndim */
+        npy_intp *dimensions;       /* size in each dimension */
+        npy_intp *strides;          /* bytes to jump to get to the
+                                   next element in each dimension */
+        PyObject *base;         /* This object should be decref'd
+                                   upon deletion of array */
+                                /* For views it points to the original array */
+                                /* For creation from buffer object it points
+                                   to an object that shold be decref'd on
+                                   deletion */
+                                /* For UPDATEIFCOPY flag this is an array
+                                   to-be-updated upon deletion of this one */
+        PyArray_Descr *descr;   /* Pointer to type structure */
+        int flags;              /* Flags describing array -- see below*/
+        PyObject *weakreflist;  /* For weakreferences */
+} PyArrayObject;
+
+typedef struct _PyArray_Descr {
+        PyObject_HEAD
+        PyTypeObject *typeobj;  /* the type object representing an
+                                   instance of this type -- should not
+                                   be two type_numbers with the same type
+                                   object. */
+        char kind;              /* kind for this type */
+        char type;              /* unique-character representing this type */
+        char byteorder;         /* '>' (big), '<' (little), '|'
+                                   (not-applicable), or '=' (native). */
+        char hasobject;         /* non-zero if it has object arrays
+                                   in fields */
+        int type_num;          /* number representing this type */
+        int elsize;             /* element size for this type */
+        int alignment;          /* alignment needed for this type */
+        struct _arr_descr                                       \
+        *subarray;              /* Non-NULL if this type is
+                                   is an array (C-contiguous)
+                                   of some other type
+                                */
+        PyObject *fields;       /* The fields dictionary for this type */
+                                /* For statically defined descr this
+                                   is always Py_None */
+
+        PyObject *names;        /* An ordered tuple of field names or NULL
+                                   if no fields are defined */
+
+        PyArray_ArrFuncs *f;     /* a table of functions specific for each
+                                    basic data descriptor */
+} PyArray_Descr;
+
+enum NPY_TYPES {    NPY_BOOL=0,
+                    NPY_BYTE, NPY_UBYTE,
+                    NPY_SHORT, NPY_USHORT,
+                    NPY_INT, NPY_UINT,
+                    NPY_LONG, NPY_ULONG,
+                    NPY_LONGLONG, NPY_ULONGLONG,
+                    NPY_FLOAT, NPY_DOUBLE, NPY_LONGDOUBLE,
+                    NPY_CFLOAT, NPY_CDOUBLE, NPY_CLONGDOUBLE,
+                    NPY_OBJECT=17,
+                    NPY_STRING, NPY_UNICODE,
+                    NPY_VOID,
+                    NPY_NTYPES,
+                    NPY_NOTYPE,
+                    NPY_CHAR,      /* special flag */
+                    NPY_USERDEF=256  /* leave room for characters */
+};
+#endif /*NUMPY_REFERENCE*/
 #endif

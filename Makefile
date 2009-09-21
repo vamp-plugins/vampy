@@ -1,17 +1,20 @@
 
-CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 #-I../host/pyRealTime.h #-fvisibility=hidden
+CXXFLAGS	:= -DHAVE_NUMPY -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 -I/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/site-packages/numpy/core/include/numpy/  #-fvisibility=hidden
+#without numpy headers available:
+#CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5  #-I../host/pyRealTime.h #-fvisibility=hidden
 LDFLAGS		:= -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
 
-all: vampy.dylib
+default: vampy.dylib 
+all: vampy.dylib vampymod.so
 
 PyExtensionModule.a: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
 	libtool -static $^ -o $@ 
 
 # The standard python extension is .so (even on the Mac)
-PyExtensionModule.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
+vampymod.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
 	g++ -shared $^ -o $@ $(LDFLAGS) 
 
-vampy.dylib:	PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a
+vampy.dylib: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a 
 	g++ -shared $^ -o $@ $(LDFLAGS) 
 
 # Install plugin

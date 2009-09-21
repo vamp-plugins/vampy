@@ -2,6 +2,9 @@
 */
 
 #include <Python.h>
+#ifdef HAVE_NUMPY
+#include "arrayobject.h"
+#endif
 #include "PyTypeInterface.h"
 #include "PyRealTime.h"
 #include "PyExtensionModule.h"
@@ -25,7 +28,7 @@ static std::map<std::string, eFeatureFields> ffKeys;
 static bool isMapInitialised = false;
 
 /*  Note: NO FUNCTION IN THIS CLASS SHOULD ALTER REFERENCE COUNTS
-	(EXCEPT FOR TEMPORARY PYOBJECTS)!  						   		*/
+	(EXCEPT FOR TEMPORARY PYTHON OBJECTS)!  						 */
 
 PyTypeInterface::PyTypeInterface() : 
 	m_strict(false),
@@ -405,29 +408,51 @@ PyTypeInterface::PyValue_To_StringVector (PyObject *inputList) const
 	return Output;
 }
 
-//convert Python list to C++ vector of floats
+//convert PyFeature.value (typically a list or numpy array) to C++ vector of floats
 std::vector<float> 
-PyTypeInterface::PyValue_To_FloatVector (PyObject *inputList) const 
+PyTypeInterface::PyValue_To_FloatVector (PyObject *pyValue) const 
 {
-	typedef std::vector<float> floatVector;
 	std::vector<float> Output;
+
+#ifdef HAVE_NUMPY
+	/// Check for NumPy Array: this requires linking with numpy
+	/// but, we don't really need this macro
+	// if (PyArray_CheckExact(inputList)) cerr << "PyPyArray_CheckExact OK" << endl;
 	
-	/// Check for NumPy Array
-	if (PyObject_HasAttrString(inputList,"__array_struct__")) {
-		int vectorLength;
-		float *dataptr = getNumPyObjectData(inputList,vectorLength);
-		if (dataptr != 0) cerr << "Numpy array found: " << vectorLength << endl;
-		// Output = *dataptr;
+	/// numpy array
+	if (PyObject_HasAttrString(pyValue,"__array_struct__")) {
+		return PyArray_To_FloatVector(pyValue);
 	}
+#endif
+
+	/// python list
+	if (PyList_Check(pyValue)) {
+		return PyList_To_FloatVector(pyValue);
+	}
+	
+	/// assume a single number 
+	/// this allows to write e.g. Feature.values = 5 instead of [5.00]
+	Output.push_back(PyValue_To_Float(pyValue));
+	return Output;
+	
+	/// TODO : set error
+	
+}
+
+//convert a list of python floats
+std::vector<float> 
+PyTypeInterface::PyList_To_FloatVector (PyObject *inputList) const 
+{
+	std::vector<float> Output;
 	
 	float ListElement;
 	PyObject *pyFloat = NULL;
 	
 	if (!PyList_Check(inputList)) return Output; 
 
-	for (Py_ssize_t k = 0; k < PyList_GET_SIZE(inputList); ++k) {
+	for (Py_ssize_t i = 0; i < PyList_GET_SIZE(inputList); ++i) {
 		//Get next list item (Borrowed Reference)
-		pyFloat =  PyList_GET_ITEM(inputList,k);
+		pyFloat = PyList_GET_ITEM(inputList,i);
 		ListElement = (float) PyFloat_AS_DOUBLE(pyFloat);
 #ifdef _DEBUG
 		cerr << "value: " << ListElement << endl;
@@ -438,6 +463,50 @@ PyTypeInterface::PyValue_To_FloatVector (PyObject *inputList) const
 	return Output;
 }
 
+#ifdef HAVE_NUMPY
+std::vector<float> 
+PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const 
+{
+	std::vector<float> Output;
+	 
+	/// we don't verify the array here as it'd be duplicated mostly
+	// if (!PyObject_HasAttrString(pyValue,"__array_struct__")) {
+	// 	return Output;
+	// }
+
+	PyArrayObject* pyArray = (PyArrayObject*) pyValue;
+	PyArray_Descr* descr = pyArray->descr;
+	
+	/// check raw data pointer
+	if (pyArray->data == 0) return Output;
+
+	/// check dimensions
+	if (pyArray->nd != 1) {
+		cerr << "Error: array must be 1D" << endl;
+		return Output;
+	}
+
+#ifdef _DEBUG
+	cerr << "Numpy array verified." << endl;
+#endif	
+
+	switch (descr->type_num)
+	{
+		case NPY_FLOAT :
+			return PyArray_Convert<float,float>(pyArray->data,pyArray->dimensions[0]);
+		case NPY_DOUBLE :
+			return PyArray_Convert<float,double>(pyArray->data,pyArray->dimensions[0]);
+		case NPY_INT :
+			return PyArray_Convert<float,int>(pyArray->data,pyArray->dimensions[0]);
+		case NPY_LONG :
+			return PyArray_Convert<float,long>(pyArray->data,pyArray->dimensions[0]);
+		
+		default :
+		cerr << "Error. Unsupported element type in NumPy array object." << endl;
+			return Output;
+	}
+}
+#endif
 
 /*			 			Vamp API Specific Types				  		
 
@@ -580,7 +649,7 @@ PyTypeInterface::PyValue_To_Feature(PyObject* pyDict) const
 Vamp::Plugin::FeatureSet
 PyTypeInterface::PyValue_To_FeatureSet(PyObject* pyValue) const
 {
-	Vamp::Plugin::FeatureSet rFeatureSet; /// PyFeatureSet is an int map
+	Vamp::Plugin::FeatureSet rFeatureSet; /// map<int>
 	if (pyValue == NULL) {
 		cerr << "NULL FeatureSet" << endl;
 		return rFeatureSet;
@@ -892,77 +961,6 @@ PyTypeInterface::getError() const
 }
 
 /*			   			  	Utilities						  		*/
-
-//return a pointer to the data in the numPy array
-float* 
-PyTypeInterface::getNumPyObjectData(PyObject *object, int &length) const
-{
-
-	char attr_name[]="__array_struct__";
-
-	//check if we passed in a NumPy array object
-	if (!PyObject_HasAttrString(object,attr_name)) {
-		// PyErr_SetString(PyExc_TypeError,
-		// "Input object has no __array_struct__ attribute. NumPy array required.");
-		return NULL;		
-	}
-
-	//retrieve __array_struct__ interface
-	object = PyObject_GetAttrString(object,attr_name);	
-
-	//check whether we found CObjects
-	if (!PyCObject_Check(object)) {
-		PyErr_SetString(PyExc_TypeError,
-		"The passed __array_struct__ interface is not a valid C Object.");
-		return NULL; 
-	}
-
-
-	//check if the pointers directed to the integer '2'
-	int *check = (int *) PyCObject_AsVoidPtr (object);
-
-	if (*check != 2 ) {
-		PyErr_SetString(PyExc_TypeError,
-		"A C Object __array_struct__ required as inputs");
-		return NULL; 
-	}
-
-	//convert CObjects to Array interfaces
-	PyArrayInterface *arrayInterface = 
-	(PyArrayInterface *) PyCObject_AsVoidPtr (object);
-
-	//check array dimension: should be 1
-	int inputDim = arrayInterface->nd;
-	
-	if (inputDim > 1 ) {
-		PyErr_SetString(PyExc_TypeError,
-		"Array dimensions must not exceed one.");
-		return NULL;		
-	}
-
-	// check if vector size is sane	
-	Py_intptr_t arrayLength = arrayInterface->shape[0];
-	length = (int) arrayLength;
-	
-	// if (arrayLength < 8 || arrayLength > 65536 ) {
-	// 	PyErr_SetString(PyExc_TypeError,
-	// 	"Array length is out of bounds.");
-	// 	return NULL;		
-	// 	}
-
-	//check type; must be float32
-	char arrayType = arrayInterface->typekind;
-
-	if (arrayType != 'f' ) {
-		PyErr_SetString(PyExc_TypeError,
-		"Floating point arrays required.");
-		return NULL;		
-	}
-
-	//return data vector address
-	return (float*) arrayInterface->data;
-	
-}
 
 /// get the type name of an object
 std::string

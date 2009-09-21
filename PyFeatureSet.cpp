@@ -9,8 +9,6 @@ FeatureSet_init(FeatureSetObject *self, PyObject *args, PyObject *kwds)
 {
     if (PyDict_Type.tp_init((PyObject *)self, args, kwds) < 0)
         return -1;
-    self->state = 0;
-	cerr << "FeatureSet initialised" << endl;
     return 0;
 }
 
@@ -20,7 +18,7 @@ FeatureSetObject_ass_sub(FeatureSetObject *mp, PyObject *v, PyObject *w)
 	// cerr << "called FeatureSetObject_ass_sub" << endl;
 	if (!PyInt_CheckExact(v)) {
 		/// TODO: Set ValueError here.
-		cerr << "Output index must be positive integer" << endl;
+		cerr << "ValueError: Output index must be positive integer" << endl;
 		return 0;
 	}
 	if (w == NULL)

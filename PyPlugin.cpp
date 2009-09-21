@@ -364,8 +364,8 @@ PyPlugin::numpyProcessCall(const float *const *inputBuffers,Vamp::RealTime times
 	PyObject *pyChannelList = PyList_New((Py_ssize_t) m_channels);
 	for (size_t i=0; i < m_channels; ++i) {
 		//Expose memory using the Buffer Interface of C/API		
-		//This will virtually pass a pointer which can be 
-		//recasted in Python code as float or complex array             
+		//This will pass a pointer which can be recasted 
+		//in Python code as float or complex array             
 		PyObject *pyBuffer = PyBuffer_FromMemory
 		((void *) (float *) inputBuffers[i], 
 		(Py_ssize_t) sizeof(float) * m_blockSize);
