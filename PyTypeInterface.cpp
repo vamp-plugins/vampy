@@ -12,7 +12,7 @@
 #include <float.h>
 #include <limits.h>
 #ifndef SIZE_T_MAX
-#define (SIZE_T_MAX (size_t) -1)
+#define SIZE_T_MAX ((size_t) -1)
 #endif
 
 using std::string;

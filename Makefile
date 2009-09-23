@@ -1,7 +1,7 @@
 
-CXXFLAGS	:= -DHAVE_NUMPY -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 -I/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/site-packages/numpy/core/include/numpy/  #-fvisibility=hidden
+CXXFLAGS	:= -DHAVE_NUMPY -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 -I/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/site-packages/numpy/core/include/numpy/ 
 #without numpy headers available:
-#CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5  #-I../host/pyRealTime.h #-fvisibility=hidden
+#CXXFLAGS	:= -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5  #-I../host/pyRealTime.h 
 LDFLAGS		:= -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
 
 default: vampy.dylib 

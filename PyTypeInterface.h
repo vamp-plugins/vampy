@@ -76,7 +76,7 @@ enum eFeatureFields {
 	};
 
 /* C++ mapping of PyNone Type*/
-typedef struct NoneType {};
+struct NoneType {};
 
 class PyTypeInterface
 {
@@ -147,7 +147,7 @@ public:
 	
 
 	template<typename RET> 
-	RET PyTypeInterface::PyValue_To_VampDescriptor(PyObject* pyValue) const
+	RET PyValue_To_VampDescriptor(PyObject* pyValue) const
 	//returns e.g. Vamp::Plugin::OutputDescriptor or Vamp::Plugin::Feature
 	{
 		PyObject* pyDict;
@@ -183,7 +183,8 @@ public:
 	/// Convert a sequence (tipically list) of PySomething to 
 	/// OutputList,ParameterList or FeatureList
 	template<typename RET,typename ELEM> //<OutputList> <OutputDescriptor>
-	RET PyTypeInterface::PyValue_To_VampList(PyObject* pyList) const
+
+	RET PyValue_To_VampList(PyObject* pyList) const
 	{
 		// Vamp::Plugin::OutputList list;
 		// Vamp::Plugin::OutputDescriptor od;
@@ -214,7 +215,7 @@ public:
 
 	/// Convert DTYPE type 1D NumpyArray to std::vector<RET>
 	template<typename RET, typename DTYPE>
-	std::vector<RET> PyTypeInterface::PyArray_Convert(char* raw_data_ptr, long length) const
+	std::vector<RET> PyArray_Convert(char* raw_data_ptr, long length) const
 	{
 		std::vector<RET> rValue;
 		DTYPE* data = (DTYPE*) raw_data_ptr;
