@@ -234,8 +234,8 @@ public:
 	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::FeatureSet &r) const
 		{ r = this->PyValue_To_FeatureSet(pyValue); }
 
-	Vamp::RealTime::RealTime PyValue_To_RealTime(PyObject*) const;
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::RealTime::RealTime &r) const
+	Vamp::RealTime PyValue_To_RealTime(PyObject*) const;
+	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::RealTime &r) const
 		{ r = this->PyValue_To_RealTime(pyValue); }
 	
 	
@@ -295,7 +295,7 @@ private:
 		{ r = PyValue_To_StringVector(pyValue); }
 	inline void _convert(PyObject *pyValue,std::vector<float> &r) const
 		{ r = PyValue_To_FloatVector(pyValue); }
-    inline void _convert(PyObject *pyValue,Vamp::RealTime::RealTime &r) const 
+    inline void _convert(PyObject *pyValue,Vamp::RealTime &r) const 
 		{ r = PyValue_To_RealTime(pyValue); }
 	
 public:

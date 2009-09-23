@@ -44,7 +44,7 @@ RealTime_frame2RealTime(PyObject *ignored, PyObject *args)
 	self = PyObject_New(RealTimeObject, &RealTime_Type); 
 	if (self == NULL) return NULL;
 
-	self->rt = new RealTime::RealTime(
+	self->rt = new RealTime(
 	RealTime::frame2RealTime(frame,sampleRate));
 
 	return (PyObject *) self;

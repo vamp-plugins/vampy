@@ -704,7 +704,7 @@ PyTypeInterface::PyValue_To_FeatureSet(PyObject* pyValue) const
 	return rFeatureSet;
 }
 
-Vamp::RealTime::RealTime
+Vamp::RealTime
 PyTypeInterface::PyValue_To_RealTime(PyObject* pyValue) const
 {
 // We accept integer sample counts (for backwards compatibility)
@@ -716,7 +716,7 @@ PyTypeInterface::PyValue_To_RealTime(PyObject* pyValue) const
 		cerr << "Converting from PyRealTime" << endl;
 #endif
 		/// just create a copy of the wrapped object
-		return Vamp::RealTime::RealTime(
+		return Vamp::RealTime(
 			*PyRealTime_AS_REALTIME(pyValue));
 	}
 	// assume integer sample count
@@ -725,10 +725,10 @@ PyTypeInterface::PyValue_To_RealTime(PyObject* pyValue) const
 	{
 		PyErr_Print(); PyErr_Clear();
 		setValueError("Error while converting integer to RealTime.",m_strict);
-		return Vamp::RealTime::RealTime();
+		return Vamp::RealTime();
 	}
 #ifdef _DEBUG
-	Vamp::RealTime::RealTime rt = 
+	Vamp::RealTime rt = 
 		Vamp::RealTime::frame2RealTime(sampleCount,m_inputSampleRate );
 	cerr << "RealTime: " << (long)sampleCount << ", ->" << rt.toString() << endl;
 	return rt;

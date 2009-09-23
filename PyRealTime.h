@@ -5,7 +5,7 @@
 
 typedef struct {
 		PyObject_HEAD
-		Vamp::RealTime::RealTime *rt;
+		Vamp::RealTime *rt;
 } RealTimeObject; 
 
 PyAPI_DATA(PyTypeObject) RealTime_Type;
@@ -21,7 +21,7 @@ PyAPI_DATA(PyTypeObject) RealTime_Type;
 PyAPI_FUNC(PyObject *) 
 PyRealTime_FromRealTime(Vamp::RealTime&);
 
-PyAPI_FUNC(const Vamp::RealTime::RealTime*) 
+PyAPI_FUNC(const Vamp::RealTime*) 
 PyRealTime_AsRealTime (PyObject *self);
 
 

@@ -1,0 +1,39 @@
+
+CXX		:= CC
+CXXFLAGS	:= -I/usr/local/include -G -DHAVE_NUMPY -O2 +w -I/usr/include/python2.6 -I/usr/lib/python2.6/site-packages/numpy/core/include/numpy -KPIC
+LDFLAGS		:= -L/usr/local/lib -G -Bstatic -lvamp-sdk -Bdynamic -lpython2.6 -lpthread -Qoption ld -Mvamp-plugin.map
+
+default: vampy.so 
+all: vampy.so vampymod.so
+
+PyExtensionModule.a: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
+	ar cr $@ $^
+
+# The standard python extension is .so (even on the Mac)
+vampymod.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
+	$(CXX) $^ -o $@ $(LDFLAGS) 
+
+vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a 
+	$(CXX) $^ -o $@ $(LDFLAGS) 
+
+# Install plugin
+#
+LIBRARY_PREFIX		:=/Library
+INSTALL_DIR			:=$(LIBRARY_PREFIX)/Audio/Plug-Ins/Vamp
+PYEXAMPLE_DIR		:='Example VamPy Plugins'
+PLUGIN_NAME			:=vampy
+PLUGIN_EXT			:=.so
+
+install:
+	mkdir -p $(INSTALL_DIR)
+	rm -f $(INSTALL_DIR)/$(PLUGIN_NAME)$(PLUGIN_EXT)
+	cp $(PLUGIN_NAME)$(PLUGIN_EXT) $(INSTALL_DIR)/$(PLUGIN_NAME)$(PLUGIN_EXT)
+
+installplug : install
+cleanplug : clean
+
+clean:	
+	rm -f *.o
+	rm -f *.a
+	rm -f *$(PLUGIN_EXT)
+
