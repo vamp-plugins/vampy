@@ -108,7 +108,7 @@ PyTypeInterface::PyValue_To_Float(PyObject* pyValue) const
 	}
 	
 	// convert the first element of any iterable sequence (for convenience and backwards compatibility)
-	if (PySequence_Check(pyValue) and PySequence_Size(pyValue) > 0) 
+	if (PySequence_Check(pyValue) && PySequence_Size(pyValue) > 0) 
 	{
 		PyObject* item = PySequence_GetItem(pyValue,0);
 		if (item)
@@ -188,7 +188,7 @@ PyTypeInterface::PyValue_To_Size_t(PyObject* pyValue) const
 	}
 	
 	// convert the first element of iterable sequences
-	if (PySequence_Check(pyValue) and PySequence_Size(pyValue) > 0) 
+	if (PySequence_Check(pyValue) && PySequence_Size(pyValue) > 0) 
 	{
 		PyObject* item = PySequence_GetItem(pyValue,0);
 		if (item)
