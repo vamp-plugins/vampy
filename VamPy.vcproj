@@ -113,7 +113,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\vamp-plugin-sdk&quot;;C:\Python26\include"
+				AdditionalIncludeDirectories="&quot;..\vamp-plugin-sdk&quot;;C:\Python26\include;&quot;C:\Python26\Lib\site-packages\numpy\core\include\numpy&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;VAMPY_EXPORTS;HAVE_NUMPY"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
