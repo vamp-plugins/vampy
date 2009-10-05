@@ -97,7 +97,7 @@ is performed in the type interface.
 static PyObject *
 OutputList_new(PyObject *ignored, PyObject *args)
 {
-	if (args and PyTuple_Check(args)) 
+	if (args && PyTuple_Check(args)) 
 		return PySequence_List(args);
 	else return (PyObject *) PyList_New(0);
 }
@@ -107,7 +107,7 @@ OutputList_new(PyObject *ignored, PyObject *args)
 static PyObject *
 ParameterList_new(PyObject *ignored, PyObject *args)
 {
-	if (args and PyTuple_Check(args)) 
+	if (args && PyTuple_Check(args)) 
 		return PySequence_List(args);
 	else return (PyObject *) PyList_New(0);
 }
@@ -116,7 +116,7 @@ ParameterList_new(PyObject *ignored, PyObject *args)
 static PyObject *
 FeatureList_new(PyObject *ignored, PyObject *args)
 {
-	if (args and PyTuple_Check(args)) 
+	if (args && PyTuple_Check(args)) 
 		return PySequence_List(args);
 	else return (PyObject *) PyList_New(0);
 }

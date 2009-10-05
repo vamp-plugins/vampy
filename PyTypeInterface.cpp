@@ -311,7 +311,7 @@ PyTypeInterface::PyValue_To_Long(PyObject* pyValue) const
 	}
 	
 	// convert the first element of iterable sequences
-	if (PySequence_Check(pyValue) and PySequence_Size(pyValue) > 0) 
+	if (PySequence_Check(pyValue) && PySequence_Size(pyValue) > 0) 
 	{
 		PyObject* item = PySequence_GetItem(pyValue,0);
 		if (item)

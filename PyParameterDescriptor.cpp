@@ -38,7 +38,7 @@ ParameterDescriptor_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 	if (self->dict == NULL) return NULL;
 
 	/// allow copying objects
-    if (args and PyTuple_Size(args) == 1) {
+    if (args && PyTuple_Size(args) == 1) {
 		PyObject* arg = PyTuple_GET_ITEM(args,0);
 		if (PyParameterDescriptor_CheckExact(arg))
 			PyDict_Merge(self->dict,PyParameterDescriptor_AS_DICT(arg),0);
