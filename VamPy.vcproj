@@ -114,7 +114,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;..\vamp-plugin-sdk&quot;;C:\Python26\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;VAMPY_EXPORTS;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;VAMPY_EXPORTS;HAVE_NUMPY"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -178,11 +178,39 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PyExtensionModule.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PyFeature.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PyFeatureSet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PyOutputDescriptor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PyParameterDescriptor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\PyPlugin.h"
 				>
 			</File>
 			<File
 				RelativePath=".\PyPlugScanner.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PyRealTime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PyTypeInterface.h"
 				>
 			</File>
 		</Filter>
@@ -202,6 +230,26 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PyExtensionModule.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PyFeature.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PyFeatureSet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PyOutputDescriptor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PyParameterDescriptor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PyPlugin.cpp"
 				>
 			</File>
@@ -210,7 +258,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pyvamp-main.cpp"
+				RelativePath=".\PyRealTime.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PyTypeInterface.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\vampy-main.cpp"
 				>
 			</File>
 		</Filter>
