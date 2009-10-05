@@ -48,7 +48,7 @@ UPDATES IN THIS VERSION (Vampy 2.0):
 HOW DOES IT WORK:
 
 	(1) Make sure you have Python (and Numpy) installed.
-	(2) Download and install vampy into your vamp plugin path.
+	(2) Download Vampy and install it to your Vamp plugin path.
 		eg. /Library/Audio/Plug-Ins/Vamp
 	(3) Write some python plugins and copy them to the same place.
 	(4) Each plugin must contain a single class with the same name as your script file.
