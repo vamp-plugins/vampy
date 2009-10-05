@@ -2,25 +2,28 @@
  * VamPy is an API wrapper for Vamp. It allows for writing Vamp 
 	plugins in Python with or without Numpy support.
 
+
 WHAT IS IT FOR?
 	
 	This wrapper is for writing Vamp plugins in Python which 
 	can do the same as a native C++ plugin, plus a lot more if 
-	you're using advanced Python modules.
+	you're using advanced Python modules such as Numpy and Scipy.
 
 	This may be an easier way to get into Vamp development.
 	You can use it for prototyping your plugin before writing 
 	it in C++.
-
+	
 
 WHY PYTHON?
 
 	Python is a general purpose high level scripting language.
 	It is interpreted, so you don't need to compile your plugins.
-	It has very high level libraries. e.g. you can stream audio from your VamPy plugin (it works for me...)
+	It has very high level libraries. e.g. you can stream audio 
+	from a Vampy plugin if you want to.
 	Supports functional programming. 
 
-UPDATE IN THIS VERSION:
+
+UPDATES IN THIS VERSION (Vampy 2.0):
 
 	* Two-way Numpy Support
 	* Embedded extension module exposing Vamp defined names 
@@ -32,59 +35,107 @@ UPDATE IN THIS VERSION:
 	* Flexible type inference to take advantage of Python's loose typing
 	* Full error checking for all Python/C API calls
 	* Various optimisations and speed-ups
+	
+	Vampy now supports two main use cases: 
+	1) Prototyping C++ Vamp plugins in Python.
+	2) Develop Vampy plugins in Python to allow the use of a vamp
+	hosts for e.g. batch processing or visualisation.
+	
+	Vampy provides an extension module which allows the use of
+	Vamp data types such as FeatureSet() or RealTime() in Vampy plugins. 
 
-PREVIOUS VAMPY README:
 
 HOW DOES IT WORK:
 
-	(1) Make sure you have Python installed.
-	(2) Compile the C++ source or ask me for a binary (MacOS).
-	(3) Copy the library in your Vamp plugin directory like any other Vamp plugins: 
+	(1) Make sure you have Python (and Numpy) installed.
+	(2) Download and install vampy into your vamp plugin path.
 		eg. /Library/Audio/Plug-Ins/Vamp
-	(4) Write some python plugins and copy them to the same place.
-	(5) Each plugin must contain a single class with the same name as your script file.
+	(3) Write some python plugins and copy them to the same place.
+	(4) Each plugin must contain a single class with the same name as your script file.
 		e.g. PyZeroCrossing.py -> calss PyZeroCrossing
 		-Scripts with syntax errors in them are ignored.
 		-Scripts not having the same class as the filename are ignored. (Python is case sensitive!)
-		-Other unknown scripts are likely to cause a crash.  (Don't put other python scripts in your Vamp directory.)
+		-Other unknown scripts may cause a crash.  
+		(Don't put other python scripts in your Vamp directory.)
+
+FLAGS :
+
+	You can use some flags to control Vampy. They are:
+
+	vf_NULL : zero value, default for vampy version 1 behaviour
+	vf_DEBUG : print debug messages to standard error
+	vf_STRICT : more strict type conversion (follows the C++ API more closely)
+	vf_QUIT : quit the host process on hard errors
+	vf_REALTIME : use RealTime time stamps
+	vf_BUFFER : use the Numpy buffer interface to 
+				pass time/frequency domain samples to the python process
+
+	vf_ARRAY : use the numpy Array interface directly
+
+	vf_DEFAULT_V2 : default Vampy version 2 behaviour 
+					(= vf_ARRAY | vf_REALTIME)
+					
+	The use of these flags is optional. The default behaviour is
+	that of Vampy version 1.
+	
+	To set the flags, place a variable called 'vampy_flags' in
+	your plugin class's __init__() function.
+	
+	Example:
+	
+	class PyMFCC(melScaling): 
+		def __init__(self,inputSampleRate):
+			self.vampy_flags = vf_DEBUG | vf_ARRAY | vf_REALTIME
+	
+
+ENVIRONMENT VARIABLES:
+
+	Vampy recognises two optional environment variables:
+	
+	VAMPY_COMPILED=1 recognise byte compiled python plugins (default)
+	VAMPY_COMPILED=0 ignore them 
+	VAMPY_EXTPATH: if given, searches this path for vampy plugins.
+	(This is useful if you want to keep your python plugins separate.)
+	Only a single fully qualified path name is recognised.
+	
+	Example:
+	export VAMPY_EXTPATH="/Users/Shared/Development/vampy-path"
 
 	
 COMPILING AND LINKING:
-
-	(1) make sure Python.h is included wherever it is on your machine 
-	(2) the plugin needs to be linked against the Python binary: e.g.: ld -lpython2.5
-
-	example on on MacOSX:
-	g++ -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5   -c -o PyPlugin.o PyPlugin.cpp
-	g++ -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5   -c -o PyPlugScanner.o PyPlugScanner.cpp
-	g++ -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5   -c -o pyvamp-main.o pyvamp-main.cpp
-	g++ -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5   -c -o Mutex.o Mutex.cpp
-	g++ -shared PyPlugin.o PyPlugScanner.o pyvamp-main.o Mutex.o -o vampy.dylib -L../vamp-plugin-sdk/vamp-sdk -lvamp-sdk -dynamiclib -lpython2.5 -lpthread
+	
+	Please use the make files provided.
+	Make sure the correct include locations are provided for
+	Python, Numpy, and the Vamp plugin SDK.
 
 	
-	(3) There is a Makefile that compiles this plugin by default.
+COMPILER OPTIONS: 
+
+	HAVE_NUMPY : compile with Numpy array interface support
+
+	for developers:
+	_DEBUG : print very detailed messages and logs while Vampy is in use
+	_DEBUG_VALUES : print all converted values to stderr
 
 
-LIMITATIONS:
-
-	This is mainly a proof of concept. The implementation is not the most efficient, but using NumPy it's very reasonable.	
-	Only tested on MacOSX and Linux (by Chris), but in theory should work on other platforms with small fixes.	
-
-	Error checking is not yet fully complete.
-	You better not make a mistake in your Python script, although in most cases you can see what the problem is 
-	if you start the host (e.g. Sonic Visualiser) from a command line interface.
-	The wrapper plugin is quite verbose and outputs error messages.
-
-
-TODO:	* needs more complete error checking (almost done)
-	* needs correct implementation of Python threading (done)
-	* more efficient data conversion using the buffering interface or ctypes (done)
+TODO:	
 	* Vamp 'programs' not implemented
 	* support multiple classes per script in scanner
-	* ensure proper cleanup, (host does a good job though)
 
 HISTORY:
-	added support for NumPy arrays in processN()
-	framecount is now passed also to legacy process() and fixed resulting bugs in the PyZeroCrossing plugin
-	added two examples which use Frequency Domain input in processN()
+
+	v1:
+	* added support for NumPy arrays in processN()
+	* framecount is now passed also to legacy process() and fixed resulting bugs in the PyZeroCrossing plugin
+	* added two examples which use Frequency Domain input in processN()
+
+	v2.0:
+	* complete rewrite (using generic functions implementing full error checking)
+	* added extension module : support RealTime and other Vamp type wrappers
+	* added numpy Array interface
+	* added falgs
+	* added environment variables
+	* recognise byte compiled python scripts
+	
+	
 
