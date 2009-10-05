@@ -12,7 +12,7 @@ PyExtensionModule.a: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDes
 vampymod.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
 	g++ $^ -o $@ $(LDFLAGS) 
 
-vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a 
+vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a  PyExtensionManager.o
 	g++ $^ -o $@ $(LDFLAGS) 
 
 # Install plugin

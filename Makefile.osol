@@ -13,13 +13,12 @@ PyExtensionModule.a: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDes
 vampymod.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
 	$(CXX) $^ -o $@ $(LDFLAGS) 
 
-vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a 
+vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a  PyExtensionManager.o
 	$(CXX) $^ -o $@ $(LDFLAGS) 
 
 # Install plugin
 #
-LIBRARY_PREFIX		:=/Library
-INSTALL_DIR			:=$(LIBRARY_PREFIX)/Audio/Plug-Ins/Vamp
+INSTALL_DIR			:=/usr/local/lib/vamp
 PYEXAMPLE_DIR		:='Example VamPy Plugins'
 PLUGIN_NAME			:=vampy
 PLUGIN_EXT			:=.so
