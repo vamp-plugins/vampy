@@ -1,0 +1,10 @@
+
+CXX	:= i586-mingw32msvc-g++
+CXXFLAGS	:= -I../include -O2 -Wall -I../../Python26/include
+
+vampy.dll:	PyPlugin.o PyPlugScanner.o pyvamp-main.o Mutex.o
+	i586-mingw32msvc-g++ -shared $^ -o $@ -L../lib -L../../Python26/libs -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython26 -Wl,--version-script=vamp-plugin.map
+
+clean:	
+	rm *.o
+
