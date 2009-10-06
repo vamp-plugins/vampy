@@ -410,7 +410,7 @@ PyPlugin::processMethodCall(const float *const *inputBuffers,Vamp::RealTime time
 	PyObject *pyChannelList = NULL;
 
 	if (m_processType == numpy_bufferProcess) {
-		pyChannelList = m_ti.InputBuffers_As_SharedMemoryList(inputBuffers,m_channels,m_blockSize);
+		pyChannelList = m_ti.InputBuffers_As_SharedMemoryList(inputBuffers,m_channels,m_blockSize,m_inputDomain);
 	} 
 
 	if (m_processType == legacyProcess) {

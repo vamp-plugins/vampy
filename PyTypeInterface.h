@@ -152,7 +152,7 @@ public:
 
 	// Input buffers to Python
 	PyObject* InputBuffers_As_PythonLists(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype);
-	PyObject* InputBuffers_As_SharedMemoryList(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize);
+	PyObject* InputBuffers_As_SharedMemoryList(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype);
 
 	// Numpy types
 #ifdef HAVE_NUMPY
@@ -449,6 +449,12 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 
 		PyObject *pySampleList = PyList_New((Py_ssize_t) blockSize);
 		PyObject **pySampleListArray =  PySequence_Fast_ITEMS(pySampleList);
+		size_t arraySize;
+
+		if (dtype==Vamp::Plugin::FrequencyDomain) 
+			arraySize = blockSize + 2;
+		else 
+			arraySize = blockSize;
 		
 		// Note: passing a complex list crashes the C-style plugin
 		// when it tries to convert it to a numpy array directly.
@@ -459,7 +465,7 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 		{
 			case Vamp::Plugin::TimeDomain :
 
-			for (size_t j = 0; j < blockSize; ++j) {
+			for (size_t j = 0; j < arraySize; ++j) {
 				PyObject *pyFloat=PyFloat_FromDouble(
 					(double) inputBuffers[i][j]);
 				pySampleListArray[j] = pyFloat;
@@ -469,7 +475,7 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 			case Vamp::Plugin::FrequencyDomain :
 
 			size_t k = 0;
-			for (size_t j = 0; j < blockSize/2; ++j) {
+			for (size_t j = 0; j < arraySize/2; ++j) {
 				PyObject *pyComplex=PyComplex_FromDoubles(
 					(double) inputBuffers[i][k], 
 					(double) inputBuffers[i][k+1]);
@@ -487,7 +493,7 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 /// numpy buffer interface: passing the sample buffers as shared memory buffers
 /// Optimization: using sequence protocol for creating the buffer list
 inline PyObject*
-PyTypeInterface::InputBuffers_As_SharedMemoryList(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize)
+PyTypeInterface::InputBuffers_As_SharedMemoryList(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype)
 {	
 	//create a list of buffers (returns new references)
 	PyObject *pyChannelList = PyList_New((Py_ssize_t) channels);
@@ -498,8 +504,13 @@ PyTypeInterface::InputBuffers_As_SharedMemoryList(const float *const *inputBuffe
 	// as complex or float array using Numpy's frombuffer() method
 	// (this will not copy values just keep the starting adresses 
 	// for each channel in a list)
-	Py_ssize_t bufferSize = (Py_ssize_t) sizeof(float) * blockSize;
-
+	Py_ssize_t bufferSize;
+	
+	if (dtype==Vamp::Plugin::FrequencyDomain) 
+		bufferSize = (Py_ssize_t) sizeof(float) * (blockSize+2);
+	else 
+		bufferSize = (Py_ssize_t) sizeof(float) * blockSize;
+	
 	for (size_t i=0; i < channels; ++i) {
 		PyObject *pyBuffer = PyBuffer_FromMemory
 		((void *) (float *) inputBuffers[i],bufferSize);
@@ -547,7 +558,7 @@ if this can be trusted, especially for more than 2 channels.
 
 		case Vamp::Plugin::FrequencyDomain :
 		typenum = dtype_complex64; //NPY_CFLOAT;
-		arraySize = (int) blockSize / 2;
+		arraySize = (int) (blockSize / 2) + 1;
 		break;
 		
 		default :

@@ -35,12 +35,12 @@ class PySpectralFeatures:
 		self.m_channels = channels
 		self.m_stepSize = stepSize		
 		self.m_blockSize = blockSize
-		self.prevMag = zeros((blockSize/2)-1)
+		self.prevMag = zeros((blockSize/2))
 		return True
 		
 	def reset(self):
 		# reset any initial conditions
-		self.prevMag = zeros((blockSize/2)-1)
+		self.prevMag = zeros((blockSize/2))
 		return None
 	
 	def getMaker(self):
