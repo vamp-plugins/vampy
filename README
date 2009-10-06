@@ -57,6 +57,7 @@ HOW DOES IT WORK:
 		-Scripts not having the same class as the filename are ignored. (Python is case sensitive!)
 		-Other unknown scripts may cause a crash.  
 		(Don't put other python scripts in your Vamp directory.)
+	    Some example plugin scripts are provided in "Example VamPy plugins".
 
 FLAGS :
 
