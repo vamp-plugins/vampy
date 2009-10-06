@@ -1,5 +1,5 @@
 
-CXXFLAGS	:= -DHAVE_NUMPY -O2 -Wall -I/usr/include/python2.6 -I/usr/lib/python2.6/dist-packages/numpy/core/include/numpy -fPIC
+CXXFLAGS	:= -DHAVE_NUMPY -O2 -Wall -I/usr/include/python2.6 -I/usr/lib/python2.6/dist-packages/numpy/core/include -fPIC
 LDFLAGS		:= -shared -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython2.6 -lpthread -Wl,--version-script=vamp-plugin.map
 
 default: vampy.so 
@@ -31,7 +31,7 @@ installplug : install
 cleanplug : clean
 
 clean:	
-	rm *.o
-	rm *.a
-	rm *$(PLUGIN_EXT)
+	rm -f *.o
+	rm -f *.a
+	rm -f *$(PLUGIN_EXT)
 
