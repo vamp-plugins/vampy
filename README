@@ -123,6 +123,7 @@ TODO:
 	* Vamp 'programs' not implemented
 	* support multiple classes per script in scanner
 
+
 HISTORY:
 
 	v1:
@@ -138,5 +139,17 @@ HISTORY:
 	* added environment variables
 	* recognise byte compiled python scripts
 	
+LICENCE:
+
+	VamPy is distributed under a "new-style BSD" license; see the
+	file COPYING for details.  You may modify and redistribute it
+	within any commercial or non-commercial, proprietary or
+	open-source context.  VamPy imposes no limitation on how you
+	may choose to license your own plugin scripts.  Note that
+	these happen to be the same terms as the Vamp SDK itself.
+
+	VamPy was written by Gyorgy Fazekas at the Centre for Digital
+	  Music, Queen Mary University of London.
+	Copyright 2008-2009 Gyorgy Fazekas.
 	
 
