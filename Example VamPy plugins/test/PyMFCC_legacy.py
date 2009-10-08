@@ -1,27 +1,32 @@
-'''PyMFCC.py - This example Vampy plugin demonstrates
-how to return sprectrogram-like features and how to return
-data using the getRemainingFeatures() function.
+'''PyMFCC_legacy.py - This example Vampy plugin demonstrates
+how to return sprectrogram-like features.
 
-The plugin has frequency domain input and is using the
-numpy array interface. (Flag: vf_ARRAY)
+This plugin has frequency domain input and is using
+the legacy input interface: the frequency samples are
+passed as python list of complex numbers.
 
-Outputs: 
-1) 2-128 MFCC coefficients
-2) Mel-warped spectrum used for the MFCC computation
-3) Filter matrix used for Mel scaling
+Note: This is not the adviced way of writing plugins, 
+since the input interfaces provided for Numpy such as the
+Numpy Array interface (flag: vf_ARRAY) are much faster.
+
+This plugin is using Numpy, but it does not rely on Vampy's
+capability of passing Numpy arrays to the process directly.
+However, it returns Numpy arrays from the process.
 
 Centre for Digital Music, Queen Mary University of London.
-Copyright (C) 2009 Gyorgy Fazekas, QMUL. (See Vamp sources 
-for licence information.)
+Copyright 2006 Gyorgy Fazekas, QMUL. 
+(See Vamp API for licence information.)
 
 Constants for Mel frequency conversion and filter 
 centre calculation are taken from the GNU GPL licenced 
 Freespeech library. Copyright (C) 1999 Jean-Marc Valin
 '''
 
-import sys,numpy,vampy
-from numpy import abs,log,exp,floor,sum,sqrt,cos,hstack
+import sys,numpy
+from numpy import log,exp,floor,sum
+from numpy import *       
 from numpy.fft import *
+import vampy
 from vampy import *
 
 
@@ -46,9 +51,10 @@ class melScaling(object):
 		self.valid = False
 		self.updated = False
 		
+		
 	def update(self): 
-		# make sure this will run only once 
-		# if called from a vamp process
+		# make sure this will run only once if called from a vamp process
+		
 		if self.updated: return self.valid
 		self.updated = True
 		self.valid = False
@@ -60,14 +66,26 @@ class melScaling(object):
 		
 		self.maxMel = 1000*log(1+self.maxHz/700.0)/log(1+1000.0/700.0)
 		self.minMel = 1000*log(1+self.minHz/700.0)/log(1+1000.0/700.0)
-		print 'minHz:%s\nmaxHz:%s\nminMel:%s\nmaxMel:%s\n' \
-		%(self.minHz,self.maxHz,self.minMel,self.maxMel)
+		print 'minHz:%s\nmaxHz:%s\nminMel:%s\nmaxMel:%s\n' %(self.minHz,self.maxHz,self.minMel,self.maxMel)
 		self.filterMatrix = self.getFilterMatrix(self.inputSize,self.numBands)
 		self.DCTMatrix = self.getDCTMatrix(self.numBands)
 		self.filterIter = self.filterMatrix.__iter__()
 		self.valid = True
 		return self.valid
-				
+		
+		# try :
+		# 	self.maxMel = 1000*log(1+self.maxHz/700.0)/log(1+1000.0/700.0)
+		# 	self.minMel = 1000*log(1+self.minHz/700.0)/log(1+1000.0/700.0)
+		# 	self.filterMatrix = self.getFilterMatrix(self.inputSize,self.numBands)
+		# 	self.DCTMatrix = self.getDCTMatrix(self.numBands)
+		# 	self.filterIter = self.filterMatrix.__iter__()
+		# 	self.valid = True
+		# 	return True
+		# except :
+		# 	print "Invalid parameter setting encountered in MelScaling class."
+		# 	return False
+		# return True
+		
 	def getFilterCentres(self,inputSize,numBands):
 		'''Calculate Mel filter centres around FFT bins.
 		This function calculates two extra bands at the edges for
@@ -101,7 +119,7 @@ class melScaling(object):
 		
 	def getDCTMatrix(self,size):
 		'''Calculate the square DCT transform matrix. Results are 
-		equivalent to Matlab dctmtx(n) with 64 bit precision.'''
+		equivalent to Matlab dctmtx(n) but with 64 bit precision.'''
 		DCTmx = numpy.array(xrange(size),numpy.float64).repeat(size).reshape(size,size)
 		DCTmxT = numpy.pi * (DCTmx.transpose()+0.5) / size
 		DCTmxT = (1.0/sqrt( size / 2.0)) * cos(DCTmx * DCTmxT)
@@ -119,15 +137,15 @@ class melScaling(object):
 		return mfccs
 	
 
-class PyMFCC(melScaling): 
+class PyMFCC_legacy(melScaling): 
 	
 	def __init__(self,inputSampleRate):
 		
 		# flags for setting some Vampy options
-		self.vampy_flags = vf_DEBUG | vf_ARRAY | vf_REALTIME
+		self.vampy_flags = vf_DEBUG | vf_REALTIME
 
 		self.m_inputSampleRate = int(inputSampleRate)
-		self.m_stepSize = 1024
+		self.m_stepSize = 512
 		self.m_blockSize = 2048
 		self.m_channels = 1
 		self.numBands = 40
@@ -144,31 +162,31 @@ class PyMFCC(melScaling):
 		return True
 	
 	def getMaker(self):
-		return 'Vampy Example Plugins'
+		return 'Vampy Test Plugins'
 		
 	def getCopyright(self):
 		return 'Plugin By George Fazekas'
 	
 	def getName(self):
-		return 'Vampy MFCC Plugin'
+		return 'Vampy Legacy FrequencyDomain MFCC Plugin'
 		
 	def getIdentifier(self):
-		return 'vampy-mfcc'
+		return 'vampy-mfcc-test-legacy'
 
 	def getDescription(self):
-		return 'A simple MFCC plugin'
+		return 'Vampy FrequencyDomain MFCC Plugin using the Legacy interface.'
 	
 	def getMaxChannelCount(self):
 		return 2
 		
 	def getInputDomain(self):
-		return FrequencyDomain #TimeDomain
+		return FrequencyDomain 
 		
 	def getPreferredBlockSize(self):
 		return 2048
 		
 	def getPreferredStepSize(self):
-		return 1024
+		return 512
 			
 	def getOutputDescriptors(self):
 		
@@ -179,14 +197,12 @@ class PyMFCC(melScaling):
 		Generic.isQuantized=True
 		Generic.sampleType = OneSamplePerStep 
 		
-		# note the inheritance of attributes (optional)
+		# note the inheritance of attributes (use is optional)
 		MFCC = OutputDescriptor(Generic)
 		MFCC.identifier = 'mfccs'
 		MFCC.name = 'MFCCs'
 		MFCC.description = 'MFCC Coefficients'
 		MFCC.binNames=map(lambda x: 'C '+str(x),range(self.cnull,int(self.numBands)))
-		if self.two_ch and self.m_channels == 2 :
-			MFCC.binNames *= 2 #repeat the list
 		MFCC.unit = None
 		if self.two_ch and self.m_channels == 2 :
 			MFCC.binCount = self.m_channels * (int(self.numBands)-self.cnull)
@@ -274,89 +290,75 @@ class PyMFCC(melScaling):
 		if paramid == 'minHz' :
 			if newval < self.maxHz and newval < self.NqHz :
 				self.minHz = float(newval)
+			print 'minHz: ', self.minHz
 		if paramid == 'maxHz' :
+			print 'trying to set maxHz to: ',newval
 			if newval < self.NqHz and newval > self.minHz+1000 :
 				self.maxHz = float(newval)
 			else :
 				self.maxHz = self.NqHz
+			print 'set to: ',self.maxHz
 		if paramid == 'cnull' :
 			self.cnull = int(not int(newval))
 		if paramid == 'melbands' :
 			self.numBands = int(newval)
 		if paramid == 'two_ch' :
 			self.two_ch = bool(newval)
-		return None
-
+			
+		return 
 				
 	def getParameter(self,paramid):
 		if paramid == 'minHz' :
-			return self.minHz
+			return float(self.minHz)
 		if paramid == 'maxHz' :
-			return self.maxHz
+			return float(self.maxHz)
 		if paramid == 'cnull' :
-			return bool(not int(self.cnull))
+			return float(not int(self.cnull))
 		if paramid == 'melbands' :
-			return self.numBands
+			return float(self.numBands)
 		if paramid == 'two_ch' :
-			return self.two_ch
+			return float(self.two_ch)
 		else:
 			return 0.0
 
-	# set numpy array process using the 'vf_ARRAY' flag in __init__()
-	# and RealTime time stamps using the 'vf_REALTIME' flag
+	# set numpy process using the 'use_numpy_interface' flag		
 	def process(self,inputbuffers,timestamp):
 		
-		# calculate the filter and DCT matrices, check 
-		# if they are computable given a set of parameters
-		# (we only do this once, when the process is called first)
 		if not self.update() : return None
 		
-		# if two channel processing is set, use process2ch
 		if self.m_channels == 2 and self.two_ch :
 			return self.process2ch(inputbuffers,timestamp)
-		
-		fftsize = self.m_blockSize
-		
-		if self.m_channels > 1 :
-			# take the average of two magnitude spectra
-			mS0 = abs(inputbuffers[0])[0:fftsize/2]
-			mS1 = abs(inputbuffers[1])[0:fftsize/2]
-			magnitudeSpectrum = (mS0 + mS1) / 2
-		else :
-			complexSpectrum = inputbuffers[0]
-			magnitudeSpectrum = abs(complexSpectrum)[0:fftsize/2]
 
-		# do the frequency warping and MFCC computation
+		fftsize = self.m_blockSize
+				
+		if self.m_channels > 1 :
+			# take the mean of the two magnitude spectra
+			complexSpectrum0 = array(inputbuffers[0])
+			complexSpectrum1 = array(inputbuffers[1])
+			magnitudeSpectrum0 = abs(complexSpectrum0)[0:fftsize/2]
+			magnitudeSpectrum1 = abs(complexSpectrum1)[0:fftsize/2]
+			magnitudeSpectrum = (magnitudeSpectrum0 + magnitudeSpectrum1) / 2
+		else :
+			complexSpectrum = array(inputbuffers[0])
+			magnitudeSpectrum = abs(complexSpectrum)[0:fftsize/2]
+		
+		# do the computation
 		melSpectrum = self.warpSpectrum(magnitudeSpectrum)
 		melCepstrum = self.getMFCCs(melSpectrum,cn=True)
-		# print melSpectrum,melCepstrum
 		
-		# returning the values: 
 		outputs = FeatureSet()
-		
-		# 1) full initialisation example using a FeatureList
-		f_mfccs = Feature()
-		f_mfccs.values = melCepstrum[self.cnull:]
-		outputs[0] = FeatureList(f_mfccs)
-		
-		# 2) simplified: when only one feature is required, 
-		# the FeatureList() can be omitted
-		outputs[1] = Feature(melSpectrum)
-		
-		# this is equivalint to writing :
-		# outputs[1] = Feature()
-		# outputs[1].values = melSpectrum
-		# or using keyword args: Feature(values = melSpectrum)
-			
+		outputs[0] = Feature(melCepstrum[self.cnull:])
+		outputs[1] = Feature(melSpectrum)		
 		return outputs
-		
+
+
 	# process channels separately (stack the returned arrays)
 	def process2ch(self,inputbuffers,timestamp):
 
 		fftsize = self.m_blockSize
 		
-		complexSpectrum0 = inputbuffers[0]
-		complexSpectrum1 = inputbuffers[1]
+		complexSpectrum0 = array(inputbuffers[0])
+		complexSpectrum1 = array(inputbuffers[1])
 		
 		magnitudeSpectrum0 = abs(complexSpectrum0)[0:fftsize/2]
 		magnitudeSpectrum1 = abs(complexSpectrum1)[0:fftsize/2]
@@ -368,11 +370,13 @@ class PyMFCC(melScaling):
 		melCepstrum1 = self.getMFCCs(melSpectrum1,cn=True)
 		
 		outputs = FeatureSet()
+		
 		outputs[0] = Feature(hstack((melCepstrum1[self.cnull:],melCepstrum0[self.cnull:])))
+		
 		outputs[1] = Feature(hstack((melSpectrum1,melSpectrum0)))
 		
 		return outputs
-	
+
 
 	def getRemainingFeatures(self):
 		if not self.update() : return []
@@ -395,4 +399,3 @@ class PyMFCC(melScaling):
 			frameSampleStart += self.m_stepSize
 
 		return output_featureSet
-		
