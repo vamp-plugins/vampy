@@ -12,8 +12,25 @@
 #include <Python.h>
 
 #ifdef HAVE_NUMPY
-#define PY_ARRAY_UNIQUE_SYMBOL VAMPY_ARRAY_API
+
+// define a unique API pointer 
+#define PY_ARRAY_UNIQUE_SYMBOL VAMPY_ARRAY_API 
 #include "numpy/arrayobject.h"
+
+// prevent building with very old versions of numpy
+#ifndef NPY_VERSION 
+#undef HAVE_NUMPY
+#endif
+
+#endif
+
+// this is not part of the API, but we will require it for a bug workaround
+// define this symbol if you use another version of numpy in the makefile
+// Vampy will not attempt to load a lower version than specified
+#ifdef HAVE_NUMPY
+#ifndef NUMPY_SHORTVERSION
+#define NUMPY_SHORTVERSION 1.1 
+#endif
 #endif
 
 #include "vamp/vamp.h"
@@ -41,6 +58,8 @@ using std::vector;
 
 static int adinstcount;
 static int totinstcount;
+static bool numpyInstalled = false;
+static bool arrayApiInitialised = false;
 
 class PyPluginAdapter : public Vamp::PluginAdapterBase
 {
@@ -66,7 +85,7 @@ protected:
     Vamp::Plugin *createPlugin(float inputSampleRate)
     {
         try {
-            PyPlugin *plugin = new PyPlugin(m_plug, inputSampleRate, m_pyClass, totinstcount);
+            PyPlugin *plugin = new PyPlugin(m_plug, inputSampleRate, m_pyClass, totinstcount, numpyInstalled);
             return plugin;
         } catch (...) {
             cerr << "PyPluginAdapter::createPlugin: Failed to construct PyPlugin" << endl;
@@ -81,15 +100,106 @@ protected:
 	bool m_failed;  
 };
 
+
 static void array_API_initialiser()
 {
-/// numpy C-API requirement
+	if (arrayApiInitialised) return; 
+
+/* Numpy 1.3 build note: there seems to be a bug 
+in this version (at least on OS/X) which will cause memory 
+access error in the array API import function if an earlier runtime 
+version of Numpy is used when loading the library.
+(below is a horrible workaround)
+*/
+
 #ifdef HAVE_NUMPY
+
+	string ver;
+	float numpyVersion;
+
+	/// attmept to test numpy version before importing the array API
+	cerr << "Numpy build information: ABI level: " << NPY_VERSION 
+	<< " Numpy version: " << NUMPY_SHORTVERSION << endl;
+	
+	PyObject *pyModule, *pyDict, *pyVer;
+	
+	pyModule = PyImport_ImportModule("numpy"); //numpy.core.multiarray
+	if (!pyModule) {
+		cerr << "Vampy was compiled with Numpy support but Numpy does not seem to be installed." << endl;
+#ifdef __APPLE__
+		cerr << "Hint: Check if Numpy is installed for the particular setup of Python used by Vampy (given by Python exec prefix)." << endl;
+#endif		
+		goto numpyFailure;
+	}
+
+	pyDict = PyModule_GetDict(pyModule); // borrowed ref
+	if (!pyDict) {
+		cerr << "Can not access Numpy module dictionary." << endl;
+		goto numpyFailure;
+	}
+
+	pyVer = PyDict_GetItemString(pyDict,"__version__"); //borrowed ref
+	if (!pyVer) {
+		cerr << "Can not access Numpy version information." << endl;
+		goto numpyFailure;
+	}
+
+	ver = PyString_AsString(pyVer);
+	ver = ver.substr(0,ver.rfind("."));
+	if(EOF == sscanf(ver.c_str(), "%f", &numpyVersion))
+	{
+		cerr << "Could not parse Numpy version information." << endl;
+		goto numpyFailure;
+	}
+
+	cerr << "Numpy runtime version: " << numpyVersion << endl;
+	if (numpyVersion < (float) NUMPY_SHORTVERSION) {
+		cerr << "Incompatible Numpy version found: " << numpyVersion << endl;
+		goto numpyFailure;
+	}
+
+	Py_DECREF(pyModule);
+
+	// At least we catch import errors, but if binary compatibility
+	// has changed without notice, this would still fail.
+	// However, we should never get to this point now anyway.
 	import_array();
-	if(NPY_VERSION != PyArray_GetNDArrayCVersion())
-		cerr << "Warning: Numpy ABI version mismatch. (Build version: " 
-		<< NPY_VERSION << " Runtime version: " << PyArray_GetNDArrayCVersion() << ")" << endl;
+	if (PyErr_Occurred()) { 
+		cerr << "Import error while loading the Numpy Array API." << endl;
+		PyErr_Print(); PyErr_Clear(); 
+		goto numpyFailure;
+	}
+	else {
+
+#ifdef _DEBUG		
+		if (NPY_VERSION != PyArray_GetNDArrayCVersion()) {  
+			// the Import function does this check already.
+			cerr << "Warning: Numpy version mismatch. (Build version: " 
+				<< NPY_VERSION << " Runtime version: " << PyArray_GetNDArrayCVersion() << ")" << endl;
+			goto numpyFailure; 
+		}
 #endif
+
+		numpyInstalled = true;
+		arrayApiInitialised = true;
+		return;
+  	}
+
+
+numpyFailure: 
+	cerr << "Please make sure you have Numpy " << NUMPY_SHORTVERSION << " or greater installed." << endl;
+	cerr << "Vampy: Numpy support disabled." << endl;
+	numpyInstalled = false;
+	arrayApiInitialised = true;
+	if (pyModule) Py_XDECREF(pyModule);
+	return;
+
+/*HAVE_NUMPY*/
+#endif 
+
+    numpyInstalled = false;
+	arrayApiInitialised = true;
+	return;
 }
 
 
@@ -187,6 +297,7 @@ const VampPluginDescriptor
 			if (PyImport_AppendInittab("vampy",initvampy) != 0)
 				cerr << "Warning: Extension module could not be added to module inittab." << endl;
 			Py_Initialize();
+			array_API_initialiser();
 			initvampy();
 #ifdef _DEBUG			
 		    cerr << "# isPythonInitialized after initialize: " << Py_IsInitialized() << endl;

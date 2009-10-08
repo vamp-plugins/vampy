@@ -124,6 +124,7 @@ public:
 	
 	// Utilities
 	void setStrictTypingFlag(bool b) {m_strict = b;}
+	void setNumpyInstalled(bool b) {m_numpyInstalled = b;}
 	ValueError getError() const;
 	std::string PyValue_Get_TypeName(PyObject*) const;
 	bool initMaps() const;
@@ -392,6 +393,7 @@ private:
 	mutable bool m_error;
 	mutable std::queue<ValueError> m_errorQueue;
 	unsigned int m_inputSampleRate; 
+	bool m_numpyInstalled;
 	
 	void setValueError(std::string,bool) const;
 	ValueError& lastError() const;
@@ -432,7 +434,7 @@ public:
 
 /* 		   		  Convert Sample Buffers to Python 	         		*/
 
-/// passing the sample buffers as buitin python lists
+/// passing the sample buffers as builtin python lists
 /// Optimization: using fast sequence protocol
 inline PyObject*
 PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype)
@@ -446,22 +448,23 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 	
 	PyObject **pyChannelListArray =  PySequence_Fast_ITEMS(pyChannelList);
 	for (size_t i=0; i < channels; ++i) {
-
-		PyObject *pySampleList = PyList_New((Py_ssize_t) blockSize);
-		PyObject **pySampleListArray =  PySequence_Fast_ITEMS(pySampleList);
-		size_t arraySize;
-
+		
+        size_t arraySize;
 		if (dtype==Vamp::Plugin::FrequencyDomain) 
-			arraySize = blockSize + 2;
+			arraySize = (blockSize / 2) + 1; //blockSize + 2; if cplx list isn't used
 		else 
 			arraySize = blockSize;
+
+		PyObject *pySampleList = PyList_New((Py_ssize_t) arraySize);
+		PyObject **pySampleListArray =  PySequence_Fast_ITEMS(pySampleList);
 		
 		// Note: passing a complex list crashes the C-style plugin
 		// when it tries to convert it to a numpy array directly.
 		// This plugin will be obsolete, but we have to find a way
-		// to prevent such crash.
+		// to prevent such crash: possibly a numpy bug, 
+		// works fine above 1.0.4
 		
-		switch (Vamp::Plugin::TimeDomain) //(dtype)
+		switch (dtype) //(Vamp::Plugin::TimeDomain)
 		{
 			case Vamp::Plugin::TimeDomain :
 
@@ -475,7 +478,7 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 			case Vamp::Plugin::FrequencyDomain :
 
 			size_t k = 0;
-			for (size_t j = 0; j < arraySize/2; ++j) {
+			for (size_t j = 0; j < arraySize; ++j) {
 				PyObject *pyComplex=PyComplex_FromDoubles(
 					(double) inputBuffers[i][k], 
 					(double) inputBuffers[i][k+1]);

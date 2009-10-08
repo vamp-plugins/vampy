@@ -73,7 +73,7 @@ enum eProcessType {
 class PyPlugin : public Vamp::Plugin
 {
 public:
-	PyPlugin(std::string plugin,float inputSampleRate, PyObject *pyClass, int &instcount);
+	PyPlugin(std::string plugin,float inputSampleRate, PyObject *pyClass, int &instcount, bool &numpyInstalled);
 	virtual ~PyPlugin();
 
 	bool initialise(size_t channels, size_t stepSize, size_t blockSize);
@@ -122,6 +122,8 @@ protected:
 	bool m_quitOnErrorFlag;
 	bool m_debugFlag;
 	bool m_useRealTimeFlag;
+	bool m_numpyInstalled;
+	mutable bool m_processFailure;
 
 	void setProcessType();
 	
@@ -129,7 +131,7 @@ protected:
 
 	bool getBooleanFlag(char flagName[],bool) const;
 	int getBinaryFlags(char flagName[], eVampyFlags) const;
-	void typeErrorHandler(char *method) const;
+	void typeErrorHandler(char *method, bool process = false) const;
 
 	/// simple 'void return' call with no args
 	void genericMethodCall(char *method) const
@@ -397,7 +399,7 @@ protected:
 inline PyPlugin::FeatureSet
 PyPlugin::processMethodCall(const float *const *inputBuffers,Vamp::RealTime timestamp)
 {
-	
+
 	/// Optimizations: 1) we avoid ...ObjArg functions since we know
 	/// the number of arguments, and we don't like va_list parsing 
 	/// in the process. 2) Also: we're supposed to incref args, 
@@ -410,16 +412,19 @@ PyPlugin::processMethodCall(const float *const *inputBuffers,Vamp::RealTime time
 	PyObject *pyChannelList = NULL;
 
 	if (m_processType == numpy_bufferProcess) {
-		pyChannelList = m_ti.InputBuffers_As_SharedMemoryList(inputBuffers,m_channels,m_blockSize,m_inputDomain);
+		pyChannelList = m_ti.InputBuffers_As_SharedMemoryList(
+				inputBuffers,m_channels,m_blockSize,m_inputDomain);
 	} 
 
 	if (m_processType == legacyProcess) {
-		pyChannelList = m_ti.InputBuffers_As_PythonLists(inputBuffers,m_channels,m_blockSize,m_inputDomain);
+		pyChannelList = m_ti.InputBuffers_As_PythonLists(
+			inputBuffers,m_channels,m_blockSize,m_inputDomain);
 	}
 
 #ifdef HAVE_NUMPY
 	if (m_processType == numpy_arrayProcess) {
-		pyChannelList = m_ti.InputBuffers_As_NumpyArray(inputBuffers,m_channels,m_blockSize,m_inputDomain);
+		pyChannelList = m_ti.InputBuffers_As_NumpyArray(
+			inputBuffers,m_channels,m_blockSize,m_inputDomain);
 	}
 #endif
 
@@ -481,7 +486,7 @@ PyPlugin::processMethodCall(const float *const *inputBuffers,Vamp::RealTime time
 		Py_DECREF(pyValue);
 		Py_DECREF(pyArgs);
 	} else {
-		typeErrorHandler(PyString_AsString(m_pyProcess));
+		typeErrorHandler(PyString_AsString(m_pyProcess),true);
 		Py_CLEAR(pyValue);
 		Py_CLEAR(pyArgs);
 	}

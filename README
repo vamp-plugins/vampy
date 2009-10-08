@@ -127,15 +127,15 @@ TODO:
 HISTORY:
 
 	v1:
-	* added support for NumPy arrays in processN()
+	* added support for Numpy arrays in processN()
 	* framecount is now passed also to legacy process() and fixed resulting bugs in the PyZeroCrossing plugin
 	* added two examples which use Frequency Domain input in processN()
 
 	v2.0:
 	* complete rewrite (using generic functions implementing full error checking)
 	* added extension module : support RealTime and other Vamp type wrappers
-	* added numpy Array interface
-	* added falgs
+	* added Numpy Array interface
+	* added flags
 	* added environment variables
 	* recognise byte compiled python scripts
 	

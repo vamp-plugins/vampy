@@ -89,6 +89,7 @@ ParameterDescriptor_getattr(ParameterDescriptorObject *self, char *name)
 			Py_INCREF(v);
 			return v;
 		}
+		PyErr_SetString(PyExc_AttributeError,"non-existing ParameterDescriptor attribute");
 	}
 	return NULL;
 }

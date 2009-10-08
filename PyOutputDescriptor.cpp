@@ -88,6 +88,7 @@ OutputDescriptor_getattr(OutputDescriptorObject *self, char *name)
 			Py_INCREF(v);
 			return v;
 		}
+		PyErr_SetString(PyExc_AttributeError,"non-existing OutputDescriptor attribute");
 	}
 	return NULL;
 }

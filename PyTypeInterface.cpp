@@ -45,6 +45,7 @@ static bool isMapInitialised = false;
 PyTypeInterface::PyTypeInterface() : 
 	m_strict(false),
 	m_error(false),
+	m_numpyInstalled(false),
 	error(m_error) // const public reference for easy access
 {
 }
@@ -64,13 +65,13 @@ PyTypeInterface::PyValue_To_Float(PyObject* pyValue) const
 	
 	if (pyValue == NULL)
 	{
-		setValueError("Error while converting float object.",m_strict);
+		setValueError("Error while converting object " + PyValue_Get_TypeName(pyValue) + " to float. ",m_strict);
 		return 0.0;		
 	}
 		
 	// in strict mode we will not try harder
 	if (m_strict) {
-		setValueError("Strict conversion error: object is not float.",m_strict);
+		setValueError("Strict conversion error: object" + PyValue_Get_TypeName(pyValue) +" is not float.",m_strict);
 		return 0.0;
 	}
 
@@ -560,9 +561,10 @@ PyTypeInterface::PyValue_To_StringVector (PyObject *pyList) const
 		}
 		return Output;
 	}
-#ifdef _DEBUG
-	cerr << "PyTypeInterface::PyValue_To_StringVector: Warning: Value is not list of strings." << endl;
-#endif
+
+// #ifdef _DEBUG
+// 	cerr << "PyTypeInterface::PyValue_To_StringVector: Warning: Value is not list of strings." << endl;
+// #endif
 
 	/// Assume a single value that can be casted as string 
 	/// this allows to write e.g. Feature.label = 5.2 instead of ['5.2']
@@ -583,6 +585,8 @@ PyTypeInterface::PyValue_To_FloatVector (PyObject *pyValue) const
 {
 
 #ifdef HAVE_NUMPY
+if (m_numpyInstalled) 
+{
 	// there are four types of values we may receive from a numpy process:
 	// * a python scalar, 
 	// * an array scalar, (e.g. numpy.float32)
@@ -604,7 +608,7 @@ PyTypeInterface::PyValue_To_FloatVector (PyObject *pyValue) const
 	/// numpy array
 	if (PyArray_CheckExact(pyValue)) 
 		return PyArray_To_FloatVector(pyValue);
-
+}
 #endif
 
 	/// python list of floats (backward compatible)
@@ -621,7 +625,7 @@ PyTypeInterface::PyValue_To_FloatVector (PyObject *pyValue) const
 		std::string msg = "Value is not list or array of floats nor can be casted as float. ";
 		setValueError(msg,m_strict);
 #ifdef _DEBUG
-	cerr << "PyTypeInterface::PyValue_To_FloatVector failed." << msg << endl;
+	cerr << "PyTypeInterface::PyValue_To_FloatVector failed. " << msg << endl;
 #endif
 	}
 	return Output;
@@ -674,7 +678,9 @@ PyTypeInterface::PyList_To_FloatVector (PyObject *inputList) const
 	return Output;
 }
 
-#ifdef HAVE_NUMPY
+// if numpy is not installed this will not be called, 
+// therefor we do not check again
+#ifdef HAVE_NUMPY 
 std::vector<float> 
 PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const 
 {
@@ -744,7 +750,7 @@ PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const
 #endif
 
 
-/// FeatureSet (an integer map of OutputLists)
+/// FeatureSet (an integer map of FeatureLists)
 Vamp::Plugin::FeatureSet
 PyTypeInterface::PyValue_To_FeatureSet(PyObject* pyValue) const
 {
@@ -798,7 +804,7 @@ PyTypeInterface::PyValue_To_FeatureSet(PyObject* pyValue) const
 		return rFeatureSet;
 	}
 
-	/// accept no return values
+	/// accept None return values
 	if (pyValue == Py_None) return rFeatureSet;
 
 	/// give up

@@ -30,7 +30,7 @@ using std::map;
 
 Mutex PyPlugin::m_pythonInterpreterMutex;
 
-PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyClass, int &instcount) :
+PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyClass, int &instcount, bool &numpyInstalled) :
 	Plugin(inputSampleRate),
 	m_pyClass(pyClass),
 	m_instcount(instcount),
@@ -44,7 +44,9 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
 	m_pyProcess(NULL),
 	m_inputDomain(TimeDomain),
 	m_quitOnErrorFlag(false),
-	m_debugFlag(false)
+	m_debugFlag(false),
+	m_numpyInstalled(numpyInstalled),
+	m_processFailure(false)
 {	
 	m_ti.setInputSampleRate(inputSampleRate);
 	MutexLocker locker(&m_pythonInterpreterMutex);
@@ -86,6 +88,7 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
    
 	if (m_debugFlag && st_flag) cerr << "Strict type conversion ON for: " << m_class << endl;
 	m_ti.setStrictTypingFlag(st_flag);
+	m_ti.setNumpyInstalled(m_numpyInstalled);
 
 }
 
@@ -188,6 +191,7 @@ void
 PyPlugin::reset()
 {
 	MutexLocker locker(&m_pythonInterpreterMutex);
+	m_processFailure = false;
 	genericMethodCall("reset");
 }
 
@@ -290,6 +294,8 @@ PyPlugin::process(const float *const *inputBuffers,Vamp::RealTime timestamp)
 	return FeatureSet();
 	}
 	
+	if (m_processFailure) return FeatureSet();
+	
 	return processMethodCall(inputBuffers,timestamp);
 
 }
@@ -298,6 +304,7 @@ PyPlugin::FeatureSet
 PyPlugin::getRemainingFeatures()
 {
 	MutexLocker locker(&m_pythonInterpreterMutex);
+	if (m_processFailure) return FeatureSet();
 	FeatureSet rValue;
 	return genericMethodCall("getRemainingFeatures",rValue); 
 }
@@ -355,6 +362,7 @@ PyPlugin::setProcessType()
 	//quering process implementation type
 	char legacyMethod[]="process";
 	char numpyMethod[]="processN";
+	m_processFailure = false;
 
 	if (PyObject_HasAttrString(m_pyInstance,legacyMethod) &&
 	    m_processType == 0) 
@@ -384,33 +392,68 @@ PyPlugin::setProcessType()
 
     if (m_vampyFlags & vf_ARRAY) {
 #ifdef HAVE_NUMPY
-		m_processType = numpy_arrayProcess;
-		if (m_debugFlag) cerr << "Process using numpy array interface." << endl;
+		if (m_numpyInstalled) { m_processType = numpy_arrayProcess;
+			if (m_debugFlag) 
+				cerr << "Process using numpy array interface." << endl;
+		}
+		else {
+			m_processFailure = true;
+			char method[]="initialise::setProcessType";
+			cerr << PLUGIN_ERROR
+			<< "This plugin requests the Numpy array interface by setting "
+			<< " the vf_ARRAY flag in its __init__() function." << endl 
+			<< "However, we could not found a version of Numpy compatible with this build of Vampy." << endl
+			<< "If you have a numerical library installed that supports the buffer interface, " << endl
+			<< "you can request this interface instead by setting the vf_BUFFER flag." << endl;
+		}
 #else
-		cerr << "Error: This version of vampy was compiled without numpy support, "
-			 << "however the vf_ARRAY flag is set for plugin: " << m_class << endl
-			 << "The default behaviour is: passing a python list of samples for each channel in process() "
-			 << "or a list of memory buffers in processN(). " << endl 
-			 << "This can be used create numpy arrays using the numpy.frombuffer() command." << endl;
+		m_processFailure = true;
+		char method[]="initialise::setProcessType";
+		cerr << PLUGIN_ERROR
+		<< "Error: This version of vampy was compiled without numpy support, "
+		<< "however the vf_ARRAY flag is set for plugin: " << m_class << endl
+		<< "The default behaviour is: passing a python list of samples for each channel in process() "
+		<< "or a list of memory buffers in processN(). " << endl 
+		<< "This can be used create numpy arrays using the numpy.frombuffer() command." << endl;
 #endif		
 	}
 	
-	if (!m_processType)
+	if (!m_pyProcessCallable)
 	{
 		m_processType = not_implemented;
 		m_pyProcess = NULL;
-		m_pyProcessCallable = NULL;
 		char method[]="initialise::setProcessType";
 		cerr << PLUGIN_ERROR << " No process implementation found. Plugin will do nothing." << endl;
+		m_processFailure = true;
 	}
 }
 
 void
-PyPlugin::typeErrorHandler(char *method) const
+PyPlugin::typeErrorHandler(char *method, bool process) const
 {
 	bool strict = false;
 	while (m_ti.error) { 
 		PyTypeInterface::ValueError e = m_ti.getError();
+#ifdef HAVE_NUMPY
+		// disable the process completely if numpy types are returned 
+		// but a compatible version was not loaded.
+		// This is required because if an object is returned from
+		// the wrong build, malloc complains about its size
+		// (i.e. the interpreter doesn't free it properly)
+		// and the process may be leaking.
+		// Note: this only happens in the obscure situation when
+		// someone forces to return wrong numpy types from an 
+		// incompatible version using the buffer interface.
+		// In this case the incampatible library is still usable,
+		// but manual conversion to python builtins is required.
+		// If the ARRAY interface is set but Numpy is not installed
+		// the process will be disabled already at initialisation.
+		if (process && !m_numpyInstalled && e.str().find("numpy")!=std::string::npos) 
+		{
+			m_processFailure = true;
+			cerr << "Warning: incompatible numpy type encountered. Disabling process." << endl;
+		}
+#endif		
 		cerr << PLUGIN_ERROR << e.str() << endl;
 		if (e.strict) strict = true;
 		// e.print();
@@ -422,5 +465,9 @@ PyPlugin::typeErrorHandler(char *method) const
 	/// It would be best if hosts could catch an exception instead
 	/// and display something meaningful to the user.
 	if (strict && m_quitOnErrorFlag) exit(EXIT_FAILURE);
+
+	// this would disable all outputs even if some are valid
+	// if (process) m_processFailure = true;
+	
 }
 
