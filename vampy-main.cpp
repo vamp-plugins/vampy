@@ -247,7 +247,7 @@ static bool preloadPython()
 	// this is useful to find out where the loaded library might be loaded from
 	cerr << "Python exec prefix: " << Py_GetExecPrefix() << endl;
 
-    char *pylib = getenv("PYLIB");
+    char *pylib = getenv("VAMPY_PYLIB");
     if (pylib && *pylib) {
         cerr << "Trying to preload Python from specified location " << pylib
 	    << "..." << endl;
