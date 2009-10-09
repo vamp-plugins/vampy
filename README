@@ -91,16 +91,23 @@ FLAGS :
 
 ENVIRONMENT VARIABLES:
 
-	Vampy recognises two optional environment variables:
+	Vampy recognises three optional environment variables:
 	
 	VAMPY_COMPILED=1 recognise byte compiled python plugins (default)
 	VAMPY_COMPILED=0 ignore them 
+
 	VAMPY_EXTPATH: if given, searches this path for vampy plugins.
 	(This is useful if you want to keep your python plugins separate.)
-	Only a single fully qualified path name is recognised.
+	Only a single absolute path name is recognised.
 	
-	Example:
-	export VAMPY_EXTPATH="/Users/Shared/Development/vampy-path"
+	  Example:
+	  export VAMPY_EXTPATH="/Users/Shared/Development/vampy-path"
+
+	VAMPY_PYLIB: path to the Python shared library to be preloaded
+        before scripts are run.  The preload is necessary on some
+        systems to support plugins that load additional Python modules.
+        Vampy will attempt to preload the right library by default, but
+        it sometimes fails; if so, set this variable to override it.
 
 	
 COMPILING AND LINKING:
@@ -113,6 +120,10 @@ COMPILING AND LINKING:
 COMPILER OPTIONS: 
 
 	HAVE_NUMPY : compile with Numpy array interface support
+
+	NUMPY_SHORTVERSION : set to the minimum version of Numpy you have, as
+ 	  a floating-point value; the default is 1.1, which should be OK for
+	  use with Numpy 1.1, 1.2 and 1.3
 
 	for developers:
 	_DEBUG : print very detailed messages and logs while Vampy is in use
