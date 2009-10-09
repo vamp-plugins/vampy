@@ -217,7 +217,7 @@ static bool tryPreload(string name)
 #else
     void *lib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!lib) {
-        perror("dlopen");
+        //perror("dlopen");
         return false;
     }
 #endif
