@@ -208,6 +208,7 @@ static bool haveScannedPlugins = false;
 
 static bool tryPreload(string name)
 {
+//    cerr << "tryPreload: " << name << endl;
 #ifdef _WIN32
     void *lib = LoadLibrary(name.c_str());
     if (!lib) {
@@ -216,9 +217,11 @@ static bool tryPreload(string name)
 #else
     void *lib = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (!lib) {
+        perror("dlopen");
         return false;
     }
 #endif
+    cerr << "Preloaded Python from " << name << endl;
     return true;
 }
 
@@ -245,9 +248,9 @@ static bool preloadPython()
 	cerr << "Python exec prefix: " << Py_GetExecPrefix() << endl;
 
     vector<string> pfxs;
-    pfxs.push_back("");
-    pfxs.push_back(string(Py_GetExecPrefix()) + "/lib/");
     pfxs.push_back(string(Py_GetExecPrefix()) + "/");
+    pfxs.push_back(string(Py_GetExecPrefix()) + "/lib/");
+    pfxs.push_back("");
     pfxs.push_back("/usr/lib/");
     pfxs.push_back("/usr/local/lib/");
     char buffer[5];
@@ -255,6 +258,8 @@ static bool preloadPython()
     // hahaha! grossness is like a brother to us
 #ifdef __APPLE__
     for (size_t pfxidx = 0; pfxidx < pfxs.size(); ++pfxidx) {
+//        cerr << "prefix: " << pfxs[pfxidx] << endl;
+	if (tryPreload(pfxs[pfxidx] + string("Python"))) return true;
         for (int minor = 8; minor >= 0; --minor) {
             sprintf(buffer, "%d", minor);
             if (tryPreload(pfxs[pfxidx] + string("libpython") + shortver + ".dylib." + buffer)) return true;
