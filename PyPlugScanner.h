@@ -67,7 +67,7 @@ protected:
 	PyPlugScanner();
 	PyObject *getScriptClass(std::string path, std::string classname);
 	std::vector<std::string> listFiles(std::string dir, std::string ext);
-	void mergeFileLists(std::vector<std::string> &s, std::vector<std::string> &t);
+	void mergeFileLists(std::vector<std::string> &src, std::vector<std::string> &tg, std::string target_ext);
 	
 	static bool m_hasInstance;
 	static PyPlugScanner *m_instance;

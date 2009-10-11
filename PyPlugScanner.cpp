@@ -81,8 +81,10 @@ PyPlugScanner::getPyPlugs()
 
         /// recognise byte compiled plugins
 		if (getCompiled) {
-        	vector<string> compiled_files = listFiles(m_path[i],"pyc");
-			mergeFileLists(compiled_files,files);
+        	vector<string> pyc_files = listFiles(m_path[i],"pyc");
+        	vector<string> pyo_files = listFiles(m_path[i],"pyo");
+			mergeFileLists(pyc_files,pyo_files,".pyo");
+			mergeFileLists(pyo_files,files,".py");
 		}
 
         for (vector<string>::iterator fi = files.begin();
@@ -113,15 +115,15 @@ return pyPlugs;
 /// them if they exist. Therefore, we prefer .py files, but we allow
 /// (relatively) closed source distributions by recognising .pyc files.
 void
-PyPlugScanner::mergeFileLists(vector<string> &pyc, vector<string> &py)
+PyPlugScanner::mergeFileLists(vector<string> &src, vector<string> &tg, string target_ext)
 {
-    for (vector<string>::iterator pycit = pyc.begin();
-    	pycit != pyc.end(); ++pycit) {
-			// cerr << *pycit;
-			string pyc_name = *pycit;
-			string py_name = pyc_name.substr(0,pyc_name.rfind('.')) + ".py";
-			vector<string>::iterator pyit = find (py.begin(), py.end(), py_name);
-			if (pyit == py.end()) py.push_back(pyc_name);
+    for (vector<string>::iterator srcit = src.begin();
+    	srcit != src.end(); ++srcit) {
+			// cerr << *srcit;
+			string src_name = *srcit;
+			string tg_name = src_name.substr(0,src_name.rfind('.')) + target_ext;
+			vector<string>::iterator tgit = find (tg.begin(), tg.end(), tg_name);
+			if (tgit == tg.end()) tg.push_back(src_name);
 	}
 	
 }

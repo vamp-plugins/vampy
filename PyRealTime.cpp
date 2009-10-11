@@ -205,9 +205,7 @@ RealTime_repr(PyObject *self)
 
 
 /*					 Number Protocol 					*/
-/// Only add and substract make sense, or what about the
-/// square root of Monday morning?
-/// Divide by integer maybe for durations?
+/// TODO: implement all methods available in Vamp::RealTime() objects
 
 static PyObject *
 RealTime_add(PyObject *s, PyObject *w)

@@ -1,39 +1,123 @@
 
- * VamPy is an API wrapper for Vamp. It allows for writing Vamp 
-	plugins in Python with or without Numpy support.
+ *  Vampy is a wrapper for the Vamp audio analysis plugin API.
+	(http://www.vamp-plugins.org/) It allows for writing Vamp 
+	plugins in Python.
 
 
 WHAT IS IT FOR?
-	
-	This wrapper is for writing Vamp plugins in Python which 
-	can do the same as a native C++ plugin, plus a lot more if 
-	you're using advanced Python modules such as Numpy and Scipy.
 
-	This may be an easier way to get into Vamp development.
-	You can use it for prototyping your plugin before writing 
-	it in C++.
+	Vamp is an audio analysis and feature extraction plugin system 
+	with a C/C++ Application Programming Interface (API).
+
+	Typical applications of Vamp plugins include visualisation, using 
+	a host such as Sonic Visualiser (http://www.sonicvisualiser.org/),
+	or batch feature extraction from audio, using Sonic Annotator 
+	(http://www.omras2.org/SonicAnnotator).
+
+	Vamp plugins are typically written in C++. Although currently
+	available plugin hosts are valuable tools in audio research,
+    the long and tedious development cycle of plugins does not 
+	support quick prototyping of feature extraction algorithms.
+	Learning the extra skills needed for plugin development or using 
+	scientific libraries available for C and C++ is often outside 
+	the interest of audio researches typically using MATLAB or other
+	high-level development environments.
 	
+	This package aims at easing Vamp plugin development, prototyping 
+	or deployment by using the high-level Python scripting language.
+
 
 WHY PYTHON?
+	
+	The Python programming language is rapidly gaining popularity
+	in the scientific community. Besides being a high-productivity
+	interpreted language, it has extensions for scientific computing
+	such as Numpy, an efficient numerical library and SciPy, a 
+	collection of Python modules for signal processing, 
+	linear algebra, statistics and machine learning ... 
+	(www.SciPy.org). These packages together with matplotlib 
+	(http://matplotlib.sourceforge.net/) provide similar capabilities
+	to most commercial modelling environments. As a further advantage, 
+	Python is a general purpose language which also supports 
+	the functional programming style.	
 
-	Python is a general purpose high level scripting language.
-	It is interpreted, so you don't need to compile your plugins.
-	It has very high level libraries. e.g. you can stream audio 
-	from a Vampy plugin if you want to.
-	Supports functional programming. 
+
+HOW DOES IT WORK?
+
+	Vampy acts like a bridge between a Vamp plugin host application
+	and Python scripts. It translates host function calls to Python
+	interpreter calls and converts Python data types to C++ and Vamp
+	defined data structures. 
+	
+	Vampy is distributed and can be installed like any other ordinary 
+	Vamp plugin. When it is installed, any appropriately structured 
+	Python script in its script directory will be presented to 
+	host programs as if they were native Vamp plugins written in C++.
+	
+	Vampy embeds the Python interpreter dynamically, and also extends 
+	it with data types defined by the Vamp C++ API, all within a 
+	single shared library.
+
+	
+OBTAINING VAMPY:
+
+	Vampy is a free, cross platform, open source package. The source
+	code is available from the Vamp-Plugins subversion repository
+	on SourceForge. (http://vamp.svn.sourceforge.net/)
+	
+	* Binary distributions are available for Windows, Mac OS/X, 
+	Linux and Solaris Unix.
+
+	* The source code can be obtained using the SVN command:
+	svn co https://vamp.svn.sourceforge.net/svnroot/vamp/vamp-vampy vampy
+
+
+DEPENDENCIES:
+
+	* Vampy requires Python 2.5 or greater. 
+	
+	Note that Vampy does not support the new flavour of Python (3.x) 
+	which breaks language compatibility with the 2.x series.
+	
+	* Vampy supports Numpy 1.1. or greater. 
+	
+	Using Numpy is optional, however writing plugins in pure Python
+	results in significantly longer processing times.
+
+
+BUILDING VAMPY:
+
+	It is advised to use a binary distribution if available for
+	your platform and Python/Numpy versions before attempting to 
+	compile it from source. If you decide to do so, please use the 
+	make files provided. Make sure the correct include locations 
+	are set for Python, Numpy, and the Vamp plugin SDK.
+
+	
+COMPILER OPTIONS: 
+
+	HAVE_NUMPY : compile with Numpy array interface support
+
+	NUMPY_SHORTVERSION : set to the minimum version of Numpy you have, 
+		as a floating-point value; the default is 1.1, which should be 
+		OK for using the plugin with Numpy 1.1, 1.2 and 1.3
+
+	simple debugging (for developers):
+		_DEBUG : print more detailed messages while Vampy is in use
+		_DEBUG_VALUES : print all converted values to stderr
 
 
 UPDATES IN THIS VERSION (Vampy 2.0):
 
-	* Two-way Numpy Support
+	* More complete, two-way Numpy support
 	* Embedded extension module exposing Vamp defined names 
 		e.g. ParameterDescriptor. This allows easier porting to C++.
 	* Support RealTime time stamps
 	* Support byte compiled Python scripts (.pyc)
-	* Environment variables: VAMPY_COMPILED, VAMPY_EXTPATH
-	* Flags to control type conversion and error reporting for development
-	* Flexible type inference to take advantage of Python's loose typing
-	* Full error checking for all Python/C API calls
+	* Environment variables
+	* Flags to control how Vampy works with each plugin
+	* Flexible type inference to take advantage of dynamic typing
+	* More complete error checking for all Python/C API calls
 	* Various optimisations and speed-ups
 	
 	Vampy now supports two main use cases: 
@@ -42,42 +126,364 @@ UPDATES IN THIS VERSION (Vampy 2.0):
 	hosts for e.g. batch processing or visualisation.
 	
 	Vampy provides an extension module which allows the use of
-	Vamp data types such as FeatureSet() or RealTime() in Vampy plugins. 
+	data types defined in the Vamp API; such as FeatureSet() or 
+	RealTime() in Vampy plugins. 
 
 
-HOW DOES IT WORK:
+BACKWARD COMPATIBILITY (Read this if you used Vampy 1):
+	
+	This is the second version of Vampy. It is largely compatible
+	with the previous version and it is able to run plugins 
+	written for it. However, due to some bug fixes in this release, 
+	it may be required to modify old plugins to work correctly 
+	with Vampy 2.0:
+	
+	* The size of the input buffers of frequency domain plugins 
+	are now longer by one element corresponding to the Nyquist
+	frequency output of the FFT. 
+	
+	* The legacy interface now uses complex numbers to pass the 
+	FFT output to frequency domain plugins in Vampy 2.0 instead 
+	of floating point values.
+	
+	* Consequently, the size of the input buffer for each 
+	audio channel is blockSize/2 + 1 if the legacy interface
+	is used and blockSize+2 if the buffer interface is used
+	in frequency domain plugins. Time domain plugins however
+	do not require any change.
+	
+	* Vampy 1 had two types of process interfaces; the legacy
+	and the buffer interface (for Numpy support). They were
+	selected based on the name of the process method.
+	A process() implementation used the legacy interface, 
+	a processN() implementation used the Numpy buffer interface.
+	This behaviour is retained for backward compatibility but
+	only if no flags are set. The use of processN() is now 
+	obsolete, since the standard process() implementation can 
+	be configured to use any of the available interfaces by 
+	setting the flags appropriately.
 
-	(1) Make sure you have Python (and Numpy) installed.
-	(2) Download Vampy and install it to your Vamp plugin path.
-		eg. /Library/Audio/Plug-Ins/Vamp
-	(3) Write some python plugins and copy them to the same place.
-	(4) Each plugin must contain a single class with the same name as your script file.
-		e.g. PyZeroCrossing.py -> calss PyZeroCrossing
-		-Scripts with syntax errors in them are ignored.
-		-Scripts not having the same class as the filename are ignored. (Python is case sensitive!)
-		-Other unknown scripts may cause a crash.  
-		(Don't put other python scripts in your Vamp directory.)
-	    Some example plugin scripts are provided in "Example VamPy plugins".
 
-FLAGS :
+USING VAMPY:	
 
-	You can use some flags to control Vampy. They are:
+	(1) Make sure you have Python 2.5 or greater installed and you
+		have a recent Vamp plugin host application. 
+		(e.g. Sonic Visualier)
 
-	vf_NULL : zero value, default for vampy version 1 behaviour
+	(2) Download a version of Vampy compatible with your
+		operating system and Python distribution.
+	
+	(3) Unzip the package and copy the shared library 
+		(Windows: vampy.dll, Linux: vampy.so, MacOS: vampy.dylib)
+		to your Vamp plugin path.
+		
+	(4) Copy the example plugins (.py files) from the 
+		'Example VamPy plugins' directory to the same place.
+		(without the example directory itself)
+
+	(5) If you are familiar with Python, it is straightforward 
+		to start writing your own plugins by following these examples.
+		
+	Note: The interpreter automatically generates a compiled version
+	of each plugin when their source file is first imported. This 
+	file can be distributed alone is so desired. Compiled or compiled 
+	and optimised versions of a plugin can also be obtained using the 
+	'py_compile' standard library module. (Note that Python byte 
+	compiled binaries are easier to reverse than C++ binaries.)
+	
+	Some familiarity with the Vamp plugin SDK and Vamp Plugin 
+	documentation is assumed before one would start writing a plugin
+	using Vampy. Only the particularities of Vampy plugins are 
+	covered here. The Vamp plugin documentation is available at:
+	* http://www.vamp-plugins.org/code-doc/index.html
+	* http://www.vamp-plugins.org/guide.pdf
+
+	
+BASIC RULES:
+
+	Only the Python scripts that follow some basic rules qualify as
+	Vampy plugins:
+	
+	(1) Each plugin must contain a single class with the 
+		same name as the script file name.
+		
+		e.g. PyZeroCrossing.py -> class PyZeroCrossing
+		
+	(2) Vampy plugins have to be in a specific directory designated
+		to Vamp plugins. The exact location is platform specific.
+		Additionally, you can use the VAMPY_EXTPATH environment
+		variable to specify a separate path for Vampy plugins.
+		
+	(3) Vampy plugins can be used and distributed as Python scripts 
+		(.py) or byte compiled Python binaries (.pyc / .pyo).
+		
+		When a script is present with the same name as a compiled
+		file on any of the valid paths, the script will be preferred.
+		
+	(4) Vampy may decide to reject some scripts after some basic
+		validation is performed:
+
+		* Scripts with syntax errors in them are ignored.
+		
+		* Scripts not containing a class with the exact same name 
+		as the file name are ignored. (Python is case sensitive!)
+		
+		* Scripts with the wrong number of arguments to the plugin 
+		class's __init__() function will be avoided.
+		
+	(5) Unknown scripts may cause undesired behaviour (or a crash).  
+		Don't put arbitrary Python scripts in your Vamp directory,
+		you may use a subdirectory for that.
+
+
+PLUGIN ERRORS:
+
+	Script validation is performed by the interpreter itself
+	using the same rules as module compilation. This means that
+	while most syntax errors will be noted when Vampy is first
+	used by a host, runtime errors can still occur during
+	execution. For example, a plugin calculating the dot product
+	of two vectors with different sizes will produce a runtime error.
+	
+	Error messages from Vampy are printed on the standard output.
+	If you're using a graphical host (such as Sonic Visualiser)
+	you may start the application from a command line terminal
+	in order to see these messages.
+		
+	Exceptions:
+		
+	* Runtime errors occurring in the plugin's __init__() function
+	will prevent the host from loading the plugin.  
+
+	* Runtime errors in the plugin's initialise() function will
+	prevent the host from using the plugin.
+		
+	* Module level errors resulting from importing a non-existent
+	module or source file or an error occurring on an imported
+	module's source tree will prevent the plugin from loading.
+
+	Any other error, including those during the process will
+	only be noted on the terminal output. Processing errors will
+	generally result in a blank screen or no results displayed by
+	graphical hosts.
+
+
+EXTENSION MODULE:
+
+	Vampy extends Python with some useful data types defined
+	by the Vamp plugin API. This extension module is embedded
+	into the Vampy shared library, therefore it doesn't need 
+	to be installed separately. However, it works very similarly 
+	to any third party Python extension within a Vampy plugin.
+	
+	You may import the extension in the usual manner using
+	" import vampy " and " from vampy import * ". (Note that
+	currently the extension module is not available as a 
+	separate package, therefore this will only work if the 
+	plugin is executed by Vampy within a usual host context.)
+	
+	You can use any standard Python statement involving 
+	modules such as " dir(vampy) " to print the names exported
+	by the module. The use of the extension in entirely optional,
+	however its use is strongly advised for the following reasons:
+
+	* Using the module hides the mapping between Python and
+	C++ data types and provides improved plugin portability.
+		
+	* Returning types exported by the module is often faster.
+		
+	* In future releases its use may become mandatory.
+
+
+PROCESS INTERFACES:
+
+	Most computationally intensive processing takes place in
+	the plugin's process() method. This method has two arguments,
+	(besides the 'self' argument mandatory in all Python class methods).
+	
+	* The fist argument is used to pass audio samples (in time 
+	domain plugins) or frequency samples (complex FFT output)
+	in frequency domain plugins. This argument is always a
+	Python list object where each element of the list corresponds
+	to an audio channel. (The length of this list can not be zero.)
+	The actual element types contained in this list depends
+	on the domain type of the plugin (time/frequency domain) and
+	the selected process interface. (explained below)
+	
+	* The second argument is the time stamp of the processing 
+	block passed to the plugin. This time stamp is either
+	a long integer corresponding to a sample number, or a
+	RealTime data type exposed by the vampy module.
+	The use of the time stamp is different in time and frequency
+	domain plugins. Please refer to the Vamp plugin documentation
+	for more details.
+	
+	Vampy supports three interfaces to process() function. 
+	The interface type can be selected using the flags indicated 
+	next to the process name below. The detailed use of these 
+	flags will be explained later.
+	
+	INTERFACE TYPES:
+	
+	(1) Legacy interface (default, slowest):
+	
+	Vampy passes a Python List of List of values to the 
+	plugin corresponding to each audio channel, and the 
+	time or frequency domain samples of each channel:
+	
+	* Audio samples are passed as an N element list 
+	of floating point values in time domain plugins,
+	(where N equals to the block size parameter of the plugin).
+
+	* Frequency Domain plugins are passed an N element list 
+	of complex numbers, where N = (blockSize/2) + 1. This list 
+	includes the DC and the Nyquist frequency FFT oputputs.
+	
+	Note: This is the only available interface which can be used 
+	without Numpy or a compatible numerical library.
+	
+	(2) Buffer interface (vf_BUFFER, fast):
+	
+	* Both time and frequency domain plugins are passed a list 
+	of shared memory buffer objects where each buffer corresponds
+	to an audio channel. The length of these buffers is blockSize
+	in time domain plugins and blockSize+2 in frequency domain
+	plugins. The easiest way to access the data in the buffers
+	is the use of Numpy's frombuffer() command. See the Numpy
+	documentation or the Vampy example plugins for more details.
+	
+	Note that this interface is very similar to how the data is
+	passed to Vamp plugins in C++.
+	
+	(3) Numpy Array interface (vf_ARRAY, fast):
+	
+	Vampy passes a list of Numpy arrays to the process() 
+	corresponding to each audio channel.
+	
+	* Time Domain plugins are passed an array of numpy.float32
+	values where the array size is N = blockSize.
+	
+	* Frequency Domain plugins are passed an array of 
+	numpy.complex64 values where the size N = (blockSize/2) + 1.
+
+
+RETURNING VALUES:
+
+	Python is a dynamically typed language, which means
+	that the programmer is not forced to declare variable 
+	types strictly and specifically, they can be decided 
+	or changed at runtime. This leads to different programming 
+	styles compared to using statically typed languages such 
+	as C++. The Vamp API is declared using C++ and expects 
+	statically declared types returned by the plugin.
+	This leads to difficulties to the Python programmer, and
+	requires a detailed knowledge of the API which otherwise
+	would be unnecessary. Vampy relaxes this requirement by
+	using a runtime type inference mechanism.
+	
+	Vampy can convert just about any suitable Python data
+	object to the appropriate C++ data type expected by a 
+	Vamp plugin host. This includes Numpy data types such as 
+	numpy.float32 or a Numpy array. The type conversion is 
+	dynamic and it is decided based on the plugin context and 
+	the expected data type defined by the Vamp plugin API 
+	in that context. This mechanism also takes advantage of the 
+	higher level Python number, sequence and mapping protocols.
+	
+	For example if the Vamp API expects a floating point value,
+	any returned Python object will be attempted to cast
+	to a floating point value first and returned to the host.
+	If the value can not be converted, an error message is 
+	displayed.
+	
+	Similarly, any returned value will be converted to a vector of 
+	the appropriate element type when the expected return type is 
+	a sequence of values. This allows the programmer to omit 
+	unnecessary conversions, when, for example, a one element 
+	list (vector) would be returned.
+	
+	The type conversion can be controlled specifically for
+	each plugin. Vampy supports the use case of prototyping
+	C++ Vamp plugins in Python by using a more strict type
+	conversion mechanism which would issue an error message
+	if the Python object does not correspond to a C++ type
+	according to a strict one-to-one mapping. This mapping
+	can be briefly outlined as follows:
+	
+	* numerical types require direct correspondence 
+	between Python and C++ types when available
+	e.g. C++ float -> Python float
+	
+	* Data structures defined in the Vamp Plugin API require
+	a type exported be the vampy extension module.
+	Vamp::FeatureSet() -> vampy.FeatureSet()
+	Vamp::RealTime() -> vampy.RealTime()
+	
+	The strict type conversion method can be selected using
+	the Vampy flag: vf_STRICT (explained in the FLAGS section).
+
+	
+TIME STAMPS :
+
+	Vamp uses RealTime time stamps to indicate the position of
+	a processing block passed to the plugin, or the position of
+	any returned features relative to the start of the audio.
+	RealTime uses two integer values to represent time values
+	to nanosecond precision. Vampy provides a Python compatible
+	representation of this this type which can be imported and 
+	used in any Vampy plugin. 
+	
+	* Vampy RealTime objects can be initialised using integers 
+	corresponding to second and nanosecond values, or seconds (floats).
+	e.g.: 
+		timestamp1 = RealTime(2,0) 
+		timestamp2 = RealTime('seconds',2.123)
+	
+	Please note that only the following methods are available:
+
+	* values() : returns a tuple of integers (sec,nsec) 
+	* toFloat() : return a floating point representation (in seconds)
+	* toFrame(samplerate) : convert to frame 
+		(sample number) given the audio sample rate
+	* toString() : human readable string representation
+	* a limited set of arithmetic operators (+,-)
+	
+	Additionally Vampy provides a function to convert frame
+	counts (in audio samples) to RealTime:
+	
+		timestamp = frame2RealTime(frameCount,inputSampleRate)
+		
+	For the detailed use of time stamps, refer to the Vamp plugin
+	documentation. i.e. Section 5, "Sample Types and Timestamps"
+	in the Vamp plugin guide, and the Vamp SDK documentation:
+	http://vamp-plugins.org/code-doc/classVamp_1_1Plugin.html
+	on how time stamps are used in process calls.
+	
+	Note: The support for RealTime time stamps is new in this 
+	version of Vampy. Vampy 1 used long integer sample counts
+	instead. This is still accepted for backward compatibility,
+	but the use of RealTime is encouraged whenever possible.
+	By default sample counts are used, please set the falg:
+	vf_REALTIME to obtain RealTime time stamps in process calls. 
+
+		
+VAMPY FLAGS :
+
+	The execution of Vampy plugins can be controlled using a set
+	of flags. (Each control flag is prefixed by vf_)
+
+	vf_NULL : zero value, default for Vampy version 1 behaviour
 	vf_DEBUG : print debug messages to standard error
-	vf_STRICT : more strict type conversion (follows the C++ API more closely)
+	vf_STRICT : strict type conversion (follows the C++ API more closely)
 	vf_QUIT : quit the host process on hard errors
 	vf_REALTIME : use RealTime time stamps
-	vf_BUFFER : use the Numpy buffer interface to 
-				pass time/frequency domain samples to the python process
-
-	vf_ARRAY : use the numpy Array interface directly
-
+	vf_BUFFER : use the Numpy Buffer interface 
+	vf_ARRAY : use the numpy Array interface
 	vf_DEFAULT_V2 : default Vampy version 2 behaviour 
-					(= vf_ARRAY | vf_REALTIME)
+		(equals to setting: vf_ARRAY | vf_REALTIME)
 					
-	The use of these flags is optional. The default behaviour is
-	that of Vampy version 1.
+	The use of flags is optional. The default behaviour is that 
+	of Vampy version 1.
 	
 	To set the flags, place a variable called 'vampy_flags' in
 	your plugin class's __init__() function.
@@ -97,11 +503,11 @@ ENVIRONMENT VARIABLES:
 	VAMPY_COMPILED=0 ignore them 
 
 	VAMPY_EXTPATH: if given, searches this path for vampy plugins.
-	(This is useful if you want to keep your python plugins separate.)
-	Only a single absolute path name is recognised.
-	
-	  Example:
-	  export VAMPY_EXTPATH="/Users/Shared/Development/vampy-path"
+		This is useful if you want to keep your python plugins 
+		separate. Only a single absolute path name is recognised.
+		
+		Example:
+	  	export VAMPY_EXTPATH="/Users/Shared/Development/vampy-path"
 
 	VAMPY_PYLIB: path to the Python shared library to be preloaded
         before scripts are run.  The preload is necessary on some
@@ -109,46 +515,35 @@ ENVIRONMENT VARIABLES:
         Vampy will attempt to preload the right library by default, but
         it sometimes fails; if so, set this variable to override it.
 
-	
-COMPILING AND LINKING:
-	
-	Please use the make files provided.
-	Make sure the correct include locations are provided for
-	Python, Numpy, and the Vamp plugin SDK.
-
-	
-COMPILER OPTIONS: 
-
-	HAVE_NUMPY : compile with Numpy array interface support
-
-	NUMPY_SHORTVERSION : set to the minimum version of Numpy you have, as
- 	  a floating-point value; the default is 1.1, which should be OK for
-	  use with Numpy 1.1, 1.2 and 1.3
-
-	for developers:
-	_DEBUG : print very detailed messages and logs while Vampy is in use
-	_DEBUG_VALUES : print all converted values to stderr
-
-
-TODO:	
-	* Vamp 'programs' not implemented
-	* support multiple classes per script in scanner
-
 
 HISTORY:
 
 	v1:
 	* added support for Numpy arrays in processN()
-	* framecount is now passed also to legacy process() and fixed resulting bugs in the PyZeroCrossing plugin
+	* framecount is now passed also to legacy process() 
+		and fixed resulting bugs in the PyZeroCrossing plugin
 	* added two examples which use Frequency Domain input in processN()
 
 	v2.0:
-	* complete rewrite (using generic functions implementing full error checking)
-	* added extension module : support RealTime and other Vamp type wrappers
+	* complete rewrite using generic functions for 
+		implementing full error checking on Python/C API calls
+	* added extension module; 
+		supports RealTime and other Vamp type wrappers
+		enables a much more readable syntax
 	* added Numpy Array interface
 	* added flags
 	* added environment variables
-	* recognise byte compiled python scripts
+	* recognise byte compiled python scripts 
+	* new example plugin PyMFCC
+	* modified all examples for the new syntax
+	* bug fix: Nyquist frequency FFT output is now passed correctly
+
+	
+TODO:	
+	* Vamp 'programs' not implemented
+	* support multiple classes per script in scanner
+	* implement missing methods of vampy.RealTime type
+
 	
 LICENCE:
 
