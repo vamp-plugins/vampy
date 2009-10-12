@@ -4,7 +4,7 @@ descriptors (curves) using Numpy and the buffer interface.
 
 Outputs: 
 1) Spectral Centroid
-2) Spectral Creast Factor
+2) Spectral Crest Factor
 3) Spectral Band-width
 4) Spectral Difference (first order)
 
