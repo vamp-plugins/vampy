@@ -1019,6 +1019,9 @@ PyTypeInterface::SetValue(Vamp::Plugin::ParameterDescriptor& pd, std::string& ke
 		case p::quantizeStep:
 			_convert(pyValue,pd.quantizeStep);
 			break;
+		case p::valueNames:
+			_convert(pyValue,pd.valueNames);
+			break;
 		default :
 		 	setValueError("Unknown key in Vamp ParameterDescriptor",m_strict);
 			cerr << "Invalid key in Vamp ParameterDescriptor: " << key << endl; 
@@ -1180,6 +1183,7 @@ PyTypeInterface::initMaps() const
 	parmKeys["defaultValue"] = p::defaultValue;
 	parmKeys["isQuantized"] = p::isQuantized;
 	parmKeys["quantizeStep"] = p::quantizeStep;
+	parmKeys["valueNames"] = p::valueNames;
 
 	isMapInitialised = true;
 	return true;

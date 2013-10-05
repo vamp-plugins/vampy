@@ -1,6 +1,6 @@
 
-CXXFLAGS	:= -DHAVE_NUMPY -O2 -Wall -I/usr/include/python2.6 -I/usr/lib/python2.6/dist-packages/numpy/core/include -fPIC
-LDFLAGS		:= -shared -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython2.6 -lpthread -Wl,--version-script=vamp-plugin.map
+CXXFLAGS	:= -DHAVE_NUMPY -O2 -Wall -I/usr/include/python2.7 -I/usr/lib/python2.7/dist-packages/numpy/core/include -fPIC
+LDFLAGS		:= -shared -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython2.7 -lpthread -Wl,--version-script=vamp-plugin.map
 
 default: vampy.so 
 all: vampy.so vampymod.so
@@ -18,7 +18,7 @@ vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyEx
 # Install plugin
 #
 INSTALL_DIR			:=$(DESTDIR)/usr/local/lib/vamp
-PYEXAMPLE_DIR			:='Example VamPy Plugins'
+PYEXAMPLE_DIR		:='Example VamPy Plugins'
 PLUGIN_NAME			:=vampy
 PLUGIN_EXT			:=.so
 

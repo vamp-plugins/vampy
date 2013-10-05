@@ -72,7 +72,8 @@ enum eParmDescriptors {
 	maxValue,
 	defaultValue,
 	isQuantized,
-	quantizeStep
+	quantizeStep,
+	valueNames
 	};
 }
 
