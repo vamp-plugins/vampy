@@ -39,7 +39,7 @@
 #include "PyPlugin.h"
 #include "PyExtensionModule.h"
 #include "PyExtensionManager.h"
-
+#include <sstream>
 
 #ifdef _WIN32
 #define pathsep ('\\')
@@ -115,6 +115,7 @@ version of Numpy is used when loading the library.
 #ifdef HAVE_NUMPY
 
 	string ver;
+	std::istringstream verStream;
 	float numpyVersion;
 
 	/// attmept to test numpy version before importing the array API
@@ -146,11 +147,16 @@ version of Numpy is used when loading the library.
 
 	ver = PyString_AsString(pyVer);
 	ver = ver.substr(0,ver.rfind("."));
-	if(EOF == sscanf(ver.c_str(), "%f", &numpyVersion))
-	{
-		cerr << "Could not parse Numpy version information." << endl;
-		goto numpyFailure;
-	}
+	/*
+	Applied patch from here: http://vamp-plugins.org/forum/index.php/topic,162.msg387.html#msg387 to replace this:
+    if(EOF == sscanf(ver.c_str(), "%f", &numpyVersion))
+    {
+     cerr << "Could not parse Numpy version information." << endl;
+     goto numpyFailure;
+    }*/
+	// parse version string to float
+    verStream.str(ver);
+    verStream >> numpyVersion;
 
 	cerr << "Numpy runtime version: " << numpyVersion << endl;
 	if (numpyVersion < (float) NUMPY_SHORTVERSION) {
