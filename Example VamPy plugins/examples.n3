@@ -1,0 +1,337 @@
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix vamp:     <http://purl.org/ontology/vamp/> .
+@prefix plugbase: <http://vamp-plugins.org/rdf/plugins/vampy#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix dc:       <http://purl.org/dc/elements/1.1/> .
+@prefix af:       <http://purl.org/ontology/af/> .
+@prefix foaf:     <http://xmlns.com/foaf/0.1/> .
+@prefix doap:     <http://usefulinc.com/ns/doap#> .
+@prefix cc:       <http://web.resource.org/cc/> .
+@prefix :         <#> .
+
+
+## Properties of this document
+
+<> a vamp:PluginDescription ;
+    foaf:maker         <http://vamp-plugins.org/rdf/template-generator> ;
+    foaf:primaryTopic  <http://vamp-plugins.org/rdf/plugins/vampy> .
+
+
+## Maker of the whole plugin library
+
+:library_maker
+    foaf:name  "Vampy Example Plugins" ;
+#   foaf:page  <> ;  # Place maker's homepage URL in here and uncomment
+#   foaf:logo  <> ;  # URL of an image here, if you happen to have a logo
+    .
+
+
+## Properties of the plugin library, and references to the plugins it contains
+
+plugbase:library a vamp:PluginLibrary ;
+    vamp:identifier        "vampy" ;
+    foaf:maker             :library_maker ; 
+    vamp:available_plugin  plugbase:vampy-mfcc ; 
+    vamp:available_plugin  plugbase:vampy-sc3 ; 
+    vamp:available_plugin  plugbase:vampy-sf3 ; 
+    vamp:available_plugin  plugbase:vampy-zc2 ; 
+#   dc:title               "" ;  # Place library name here and uncomment
+#   dc:description         "" ;  # Place library description here and uncomment
+#   foaf:page              <> ;  # Place more-info HTML page URL here and uncomment
+#   doap:download-page     <> ;  # Place download HTML page URL here and uncomment
+    .
+
+
+## Properties of the Vampy MFCC Plugin plugin
+
+plugbase:vampy-mfcc a vamp:Plugin ;
+    dc:title              "Vampy MFCC Plugin" ;
+    vamp:name             "Vampy MFCC Plugin" ;
+    dc:description        """A simple MFCC plugin""" ;
+    foaf:maker            :library_maker ;
+    dc:rights             """Plugin By George Fazekas. Freely redistributable example plugin (BSD license)""" ;
+#   cc:license            <Place plugin license URI here and uncomment> ; 
+    vamp:identifier       "vampy-mfcc" ;
+    vamp:vamp_API_version vamp:api_version_2 ;
+    owl:versionInfo       "2" ;
+    vamp:input_domain     vamp:FrequencyDomain ;
+
+    vamp:parameter   plugbase:vampy-mfcc_param_melbands ;
+    vamp:parameter   plugbase:vampy-mfcc_param_minHz ;
+    vamp:parameter   plugbase:vampy-mfcc_param_maxHz ;
+    vamp:parameter   plugbase:vampy-mfcc_param_cnull ;
+    vamp:parameter   plugbase:vampy-mfcc_param_two_ch ;
+
+    vamp:output      plugbase:vampy-mfcc_output_mfccs ;
+    vamp:output      plugbase:vampy-mfcc_output_warped-fft ;
+    vamp:output      plugbase:vampy-mfcc_output_mel-filter-matrix ;
+    .
+plugbase:vampy-mfcc_param_melbands a  vamp:QuantizedParameter ;
+    vamp:identifier     "melbands" ;
+    dc:title            "Number of bands (coefficients)" ;
+    dc:format           "" ;
+    vamp:min_value       2 ;
+    vamp:max_value       128 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   1  ;
+    vamp:default_value   40 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-mfcc_param_minHz a  vamp:QuantizedParameter ;
+    vamp:identifier     "minHz" ;
+    dc:title            "minimum frequency" ;
+    dc:format           "Hz" ;
+    vamp:min_value       0 ;
+    vamp:max_value       24000 ;
+    vamp:unit           "Hz" ;
+    vamp:quantize_step   1  ;
+    vamp:default_value   0 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-mfcc_param_maxHz a  vamp:QuantizedParameter ;
+    vamp:identifier     "maxHz" ;
+    dc:title            "maximum frequency" ;
+    dc:format           "Hz" ;
+    vamp:min_value       100 ;
+    vamp:max_value       24000 ;
+    vamp:unit           "Hz" ;
+    vamp:quantize_step   100  ;
+    vamp:default_value   11025 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-mfcc_param_cnull a  vamp:QuantizedParameter ;
+    vamp:identifier     "cnull" ;
+    dc:title            "Return C0" ;
+    dc:format           "" ;
+    vamp:min_value       0 ;
+    vamp:max_value       1 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   1  ;
+    vamp:default_value   0 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-mfcc_param_two_ch a  vamp:QuantizedParameter ;
+    vamp:identifier     "two_ch" ;
+    dc:title            "Process channels separately" ;
+    dc:format           "" ;
+    vamp:min_value       0 ;
+    vamp:max_value       1 ;
+    vamp:unit           "" ;
+    vamp:quantize_step   1  ;
+    vamp:default_value   0 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-mfcc_output_mfccs a  vamp:DenseOutput ;
+    vamp:identifier       "mfccs" ;
+    dc:title              "MFCCs" ;
+    dc:description        """MFCC Coefficients"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "" ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    -2.14949e+08  ;
+    vamp:bin_count        39 ;
+    vamp:bin_names        ( "C 1" "C 2" "C 3" "C 4" "C 5" "C 6" "C 7" "C 8" "C 9" "C 10" "C 11" "C 12" "C 13" "C 14" "C 15" "C 16" "C 17" "C 18" "C 19" "C 20" "C 21" "C 22" "C 23" "C 24" "C 25" "C 26" "C 27" "C 28" "C 29" "C 30" "C 31" "C 32" "C 33" "C 34" "C 35" "C 36" "C 37" "C 38" "C 39");
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+plugbase:vampy-mfcc_output_warped-fft a  vamp:DenseOutput ;
+    vamp:identifier       "warped-fft" ;
+    dc:title              "Mel Scaled Spectrum" ;
+    dc:description        """Mel Scaled Magnitide Spectrum"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "Mel" ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    -2.14949e+08  ;
+    vamp:bin_count        40 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+plugbase:vampy-mfcc_output_mel-filter-matrix a  vamp:DenseOutput ;
+    vamp:identifier       "mel-filter-matrix" ;
+    dc:title              "Mel Filter Matrix" ;
+    dc:description        """Returns the created filter matrix in getRemainingFeatures."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "" ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    -2.14949e+08  ;
+    vamp:bin_count        39 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+
+## Properties of the Spectral Centroid (using legacy process interface) plugin
+
+plugbase:vampy-sc3 a vamp:Plugin ;
+    dc:title              "Spectral Centroid (using legacy process interface)" ;
+    vamp:name             "Spectral Centroid (using legacy process interface)" ;
+    dc:description        """Calculate the linear frequency centroid of the short-time Fourier spectrum""" ;
+    foaf:maker            :library_maker ;
+    dc:rights             """Plugin By George Fazekas. Freely redistributable example plugin (BSD license)""" ;
+#   cc:license            <Place plugin license URI here and uncomment> ; 
+    vamp:identifier       "vampy-sc3" ;
+    vamp:vamp_API_version vamp:api_version_2 ;
+    owl:versionInfo       "2" ;
+    vamp:input_domain     vamp:FrequencyDomain ;
+
+    vamp:parameter   plugbase:vampy-sc3_param_threshold ;
+
+    vamp:output      plugbase:vampy-sc3_output_vampy-sc3 ;
+    .
+plugbase:vampy-sc3_param_threshold a  vamp:Parameter ;
+    vamp:identifier     "threshold" ;
+    dc:title            "Noise threshold" ;
+    dc:format           "v" ;
+    vamp:min_value       0 ;
+    vamp:max_value       0.5 ;
+    vamp:unit           "v"  ;
+    vamp:default_value   0.05 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-sc3_output_vampy-sc3 a  vamp:DenseOutput ;
+    vamp:identifier       "vampy-sc3" ;
+    dc:title              "Spectral Centroid" ;
+    dc:description        """Spectral Centroid (Brightness)"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "" ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    1  ;
+    vamp:bin_count        1 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+
+## Properties of the Vampy Spectral Features plugin
+
+plugbase:vampy-sf3 a vamp:Plugin ;
+    dc:title              "Vampy Spectral Features" ;
+    vamp:name             "Vampy Spectral Features" ;
+    dc:description        """A collection of low-level spectral descriptors.""" ;
+    foaf:maker            :library_maker ;
+    dc:rights             """Plugin By George Fazekas. Freely redistributable example plugin (BSD license)""" ;
+#   cc:license            <Place plugin license URI here and uncomment> ; 
+    vamp:identifier       "vampy-sf3" ;
+    vamp:vamp_API_version vamp:api_version_2 ;
+    owl:versionInfo       "2" ;
+    vamp:input_domain     vamp:FrequencyDomain ;
+
+    vamp:parameter   plugbase:vampy-sf3_param_threshold ;
+
+    vamp:output      plugbase:vampy-sf3_output_vampy-sc ;
+    vamp:output      plugbase:vampy-sf3_output_vampy-scf ;
+    vamp:output      plugbase:vampy-sf3_output_vampy-bw ;
+    vamp:output      plugbase:vampy-sf3_output_vampy-sd ;
+    .
+plugbase:vampy-sf3_param_threshold a  vamp:Parameter ;
+    vamp:identifier     "threshold" ;
+    dc:title            "Noise threshold" ;
+    dc:format           "v" ;
+    vamp:min_value       0 ;
+    vamp:max_value       1 ;
+    vamp:unit           "v"  ;
+    vamp:default_value   0.05 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-sf3_output_vampy-sc a  vamp:DenseOutput ;
+    vamp:identifier       "vampy-sc" ;
+    dc:title              "Spectral Centroid" ;
+    dc:description        """Spectral Centroid (Brightness)"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "Hz" ;
+    vamp:bin_count        1 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+plugbase:vampy-sf3_output_vampy-scf a  vamp:DenseOutput ;
+    vamp:identifier       "vampy-scf" ;
+    dc:title              "Spectral Crest Factor" ;
+    dc:description        """Spectral Crest (Tonality)"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "v" ;
+    vamp:bin_count        1 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+plugbase:vampy-sf3_output_vampy-bw a  vamp:DenseOutput ;
+    vamp:identifier       "vampy-bw" ;
+    dc:title              "Band Width" ;
+    dc:description        """Spectral Band Width"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "Hz" ;
+    vamp:bin_count        1 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+plugbase:vampy-sf3_output_vampy-sd a  vamp:DenseOutput ;
+    vamp:identifier       "vampy-sd" ;
+    dc:title              "Spectral Difference" ;
+    dc:description        """Eucledian distance of successive magnitude spectra."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "Hz" ;
+    vamp:bin_count        1 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+
+## Properties of the Vampy Zero Crossings plugin
+
+plugbase:vampy-zc2 a vamp:Plugin ;
+    dc:title              "Vampy Zero Crossings" ;
+    vamp:name             "Vampy Zero Crossings" ;
+    dc:description        """Count the number of simple zero-crossings for the signal within each processing block""" ;
+    foaf:maker            :library_maker ;
+    dc:rights             """Plugin By George Fazekas. Freely redistributable example plugin (BSD license)""" ;
+#   cc:license            <Place plugin license URI here and uncomment> ; 
+    vamp:identifier       "vampy-zc2" ;
+    vamp:vamp_API_version vamp:api_version_2 ;
+    owl:versionInfo       "2" ;
+    vamp:input_domain     vamp:TimeDomain ;
+    vamp:parameter   plugbase:vampy-zc2_param_threshold ;
+
+    vamp:output      plugbase:vampy-zc2_output_vampy-counts ;
+    vamp:output      plugbase:vampy-zc2_output_vampy-crossings ;
+    .
+plugbase:vampy-zc2_param_threshold a  vamp:Parameter ;
+    vamp:identifier     "threshold" ;
+    dc:title            "Noise threshold" ;
+    dc:format           "v" ;
+    vamp:min_value       0 ;
+    vamp:max_value       0.5 ;
+    vamp:unit           "v"  ;
+    vamp:default_value   0.005 ;
+    vamp:value_names     ();
+    .
+plugbase:vampy-zc2_output_vampy-counts a  vamp:DenseOutput ;
+    vamp:identifier       "vampy-counts" ;
+    dc:title              "Number of Zero Crossings" ;
+    dc:description        """Number of zero crossings per audio frame"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             " " ;
+    a                     vamp:QuantizedOutput ;
+    vamp:quantize_step    1  ;
+    vamp:bin_count        1 ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+plugbase:vampy-zc2_output_vampy-crossings a  vamp:SparseOutput ;
+    vamp:identifier       "vampy-crossings" ;
+    dc:title              "Zero Crossing Locations" ;
+    dc:description        """The locations of zero crossing points"""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "discrete" ;
+    vamp:bin_count        0 ;
+    vamp:sample_type      vamp:VariableSampleRate ;
+#   vamp:computes_event_type   <Place event type URI here and uncomment> ;
+#   vamp:computes_feature      <Place feature attribute URI here and uncomment> ;
+#   vamp:computes_signal_type  <Place signal type URI here and uncomment> ;
+    .
+

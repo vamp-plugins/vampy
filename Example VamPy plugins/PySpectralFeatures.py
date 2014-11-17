@@ -54,7 +54,10 @@ class PySpectralFeatures:
 
 	def getDescription(self):
 		return 'A collection of low-level spectral descriptors.'
-	
+
+        def getCopyright(self):
+                return 'Plugin By George Fazekas. Freely redistributable example plugin (BSD license)'
+
 	def getMaxChannelCount(self):
 		return 1
 		

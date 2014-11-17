@@ -153,7 +153,7 @@ class PyMFCC(melScaling):
 		return 'Vampy Example Plugins'
 		
 	def getCopyright(self):
-		return 'Plugin By George Fazekas'
+		return 'Plugin By George Fazekas. Freely redistributable example plugin (BSD license)'
 	
 	def getName(self):
 		return 'Vampy MFCC Plugin'

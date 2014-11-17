@@ -4,7 +4,7 @@ This plugin also introduces the use of the builtin vampy
 extension module.
 
 The plugin has frequency domain input and is using the
-legacy interface: the FFT outpout is passed as a list
+legacy interface: the FFT output is passed as a list
 of complex numbers.
 
 Outputs: 
@@ -57,7 +57,13 @@ class PySpectralCentroid:
 		
 	def getIdentifier(self):
 		return 'vampy-sc3'
-	
+
+        def getDescription(self):
+                return 'Calculate the linear frequency centroid of the short-time Fourier spectrum'
+
+        def getCopyright(self):
+                return 'Plugin By George Fazekas. Freely redistributable example plugin (BSD license)'
+        
 	def getMaxChannelCount(self):
 		return 1
 		

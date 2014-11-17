@@ -39,6 +39,12 @@ class PyZeroCrossing:
 	
 	def getName(self):
 		return 'Vampy Zero Crossings'
+
+        def getDescription(self):
+                return 'Count the number of simple zero-crossings for the signal within each processing block'
+
+        def getCopyright(self):
+                return 'Plugin By George Fazekas. Freely redistributable example plugin (BSD license)'
 		
 	def getIdentifier(self):
 		return 'vampy-zc2'
