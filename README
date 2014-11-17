@@ -105,6 +105,9 @@ COMPILER OPTIONS:
 	simple debugging (for developers):
 		_DEBUG : print more detailed messages while Vampy is in use
 		_DEBUG_VALUES : print all converted values to stderr
+		
+	(But note that basic debug messages are compiled in already, and
+	will be displayed if the environment variable VAMPY_VERBOSE is set.)
 
 
 UPDATES IN THIS VERSION (Vampy 2.0):
@@ -497,8 +500,10 @@ VAMPY FLAGS :
 
 ENVIRONMENT VARIABLES:
 
-	Vampy recognises three optional environment variables:
-	
+	Vampy recognises these optional environment variables:
+
+	VAMPY_VERBOSE if set at all, print out debug info to stderr
+
 	VAMPY_COMPILED=1 recognise byte compiled python plugins (default)
 	VAMPY_COMPILED=0 ignore them 
 

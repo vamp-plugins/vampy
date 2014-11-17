@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
 
  * Vampy : This plugin is a wrapper around the Vamp plugin API.
@@ -14,6 +15,7 @@
 #include "PyExtensionModule.h"
 #include "PyExtensionManager.h"
 #include <algorithm>
+#include "Debug.h"
 
 using std::cerr;
 using std::endl;
@@ -44,15 +46,13 @@ const char* PyExtensionManager::m_exposedNames[] = {
 
 PyExtensionManager::PyExtensionManager()
 {
-#ifdef _DEBUG	
-	cerr << "Creating extension manager." << endl;
-#endif
+	DSTREAM << "Creating extension manager." << endl;
 }
 
 bool 
 PyExtensionManager::initExtension() 
 {
-	cerr << "Initialising extension module." << endl; 
+	DSTREAM << "Initialising extension module." << endl; 
 
 	/// call the module initialiser first
 	initvampy();
@@ -70,28 +70,24 @@ PyExtensionManager::initExtension()
     
 	/// initialise local namespaces
 	updateAllLocals();
-#ifdef _DEBUG
-	cerr << "Vampy: Extension namespaces updated." << endl; 
-#endif	
+
+	DSTREAM << "Vampy: Extension namespaces updated." << endl; 
+
 	return true;
 }
 
 
 PyExtensionManager::~PyExtensionManager()
 {
-#ifdef _DEBUG	
-	cerr << "Cleaning locals..." << endl;
-#endif	
+	DSTREAM << "Cleaning locals..." << endl;
 
 	cleanAllLocals(); 
 
-#ifdef _DEBUG	
-	cerr << "Cleaning module..." << endl;
-#endif	
+	DSTREAM << "Cleaning module..." << endl;
 
 	if (!cleanModule()) 
 		cerr << "Vampy::~PyExtensionManager: failed to clean extension module." << endl;
-	cerr << "Vampy::~PyExtensionManager: Extension module cleaned." << endl;
+	DSTREAM << "Vampy::~PyExtensionManager: Extension module cleaned." << endl;
 }
 
 
@@ -104,10 +100,7 @@ PyExtensionManager::setPlugModuleNames(vector<string> pyPlugs)
 		string tmp = modName.substr(modName.rfind(':')+1,modName.size()-1);
 		m_plugModuleNames.push_back(tmp);
 
-#ifdef _DEBUG_VALUES		
-		cerr << "Inserted module name: " << tmp << endl;
-#endif		
-
+		DSTREAM << "Inserted module name: " << tmp << endl;
 	}
 }
 
@@ -118,9 +111,8 @@ PyExtensionManager::deleteModuleName(string plugKey)
 	vector<string>::iterator it = 
 		find (m_plugModuleNames.begin(), m_plugModuleNames.end(), name);
 	if (it != m_plugModuleNames.end()) m_plugModuleNames.erase(it);
-#ifdef _DEBUG_VALUES		
-	cerr << "PyExtensionManager::deleteModuleName: Deleted module name: " << name << endl;
-#endif	
+
+	DSTREAM << "PyExtensionManager::deleteModuleName: Deleted module name: " << name << endl;
 }
 
 
@@ -160,9 +152,7 @@ PyExtensionManager::cleanLocalNamespace(const char* plugModuleName) const
 			if (PyDict_SetItem(pyPlugDict,key,Py_None) != 0)
 				cerr << "Vampy::PyExtensionManager::cleanLocalNamespace: Failed: " 
 				<< name << " of "<< plugModuleName << endl;
-#ifdef _DEBUG_VALUES
-			else cerr << "Cleaned local name: " << name << endl;
-#endif			
+			else DSTREAM << "Cleaned local name: " << name << endl;
 		}
 		Py_DECREF(key);
 	}
@@ -192,9 +182,7 @@ PyExtensionManager::updateLocalNamespace(const char* plugModuleName) const
 			if (PyDict_SetItem(pyPlugDict,key,item) != 0)
 				cerr << "Vampy::PyExtensionManager::updateLocalNamespace: Failed: " 
 				<< name << " of "<< plugModuleName << endl;
-#ifdef _DEBUG_VALUES
-			else cerr << "Updated local name: " << name << endl;
-#endif			
+			else DSTREAM << "Updated local name: " << name << endl;
 		}
 		Py_DECREF(key);
 	}
@@ -214,7 +202,7 @@ PyExtensionManager::cleanModule(void) const
 		PyObject *dict = PyModule_GetDict(m);
 #ifdef _DEBUG		
 		Py_ssize_t ln = PyDict_Size(dict);
-		cerr << "Vampy::PyExtensionManager::cleanModule: Size of module dict = " << (int) ln << endl;
+		DSTREAM << "Vampy::PyExtensionManager::cleanModule: Size of module dict = " << (int) ln << endl;
 #endif		
 		/// Clean the module dictionary.
 		// printDict(dict);
@@ -226,7 +214,7 @@ PyExtensionManager::cleanModule(void) const
 		Py_XDECREF(name);
 #ifdef _DEBUG		
 	    ln = PyDict_Size(dict);
-		cerr << "Vampy::PyExtensionManager::cleanModule: Size of module dict (cleaned) = " << (int) ln << endl;
+		DSTREAM << "Vampy::PyExtensionManager::cleanModule: Size of module dict (cleaned) = " << (int) ln << endl;
 #endif
 		return true;
 	}

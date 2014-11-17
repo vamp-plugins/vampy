@@ -14,7 +14,7 @@
 #include "PyTypeInterface.h"
 #include <stdlib.h>
 #include "PyExtensionModule.h"
-
+#include "Debug.h"
 
 #ifdef _WIN32
 #define PATHSEP ('\\')
@@ -50,7 +50,7 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
 {	
 	m_ti.setInputSampleRate(inputSampleRate);
 	MutexLocker locker(&m_pythonInterpreterMutex);
-	cerr << "Creating instance " << m_instcount << " of " << pluginKey << endl;
+	DSTREAM << "Creating instance " << m_instcount << " of " << pluginKey << endl;
 		
 	// Create an instance
 	Py_INCREF(m_pyClass);
@@ -82,7 +82,7 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
 	m_useRealTimeFlag = (bool) (m_vampyFlags & vf_REALTIME);
 		
 	if (m_debugFlag) cerr << "Debug messages ON for Vampy plugin: " << m_class << endl;
-	else cerr << "Debug messages OFF for Vampy plugin: " << m_class << endl;
+	else DSTREAM << "Debug messages OFF for Vampy plugin: " << m_class << endl;
 	
 	if (m_debugFlag && m_quitOnErrorFlag) cerr << "Quit on type error ON for: " << m_class << endl;
    
@@ -103,9 +103,7 @@ PyPlugin::~PyPlugin()
 	if (m_pyClass) Py_DECREF(m_pyClass); 
 	if (m_pyProcess) Py_CLEAR(m_pyProcess);
 
-#ifdef _DEBUG
-	cerr << "PyPlugin::PyPlugin:" << m_class << " instance " << m_instcount << " deleted." << endl;
-#endif
+	DSTREAM << "PyPlugin::PyPlugin:" << m_class << " instance " << m_instcount << " deleted." << endl;
 }
 
 string

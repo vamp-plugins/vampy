@@ -22,7 +22,7 @@ class PySpectralFeatures:
 	def __init__(self,inputSampleRate):
 
 		# flags:
-		self.vampy_flags = vf_DEBUG | vf_BUFFER | vf_REALTIME
+		self.vampy_flags = vf_BUFFER | vf_REALTIME
 
 		self.m_inputSampleRate = inputSampleRate
 		self.m_stepSize = 0

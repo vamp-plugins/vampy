@@ -16,6 +16,7 @@
 #include "PyFeatureSet.h"
 #include "PyParameterDescriptor.h"
 #include "PyOutputDescriptor.h"
+#include "Debug.h"
 #include "vamp/vamp.h"
 #include "vamp-sdk/Plugin.h"
 
@@ -250,9 +251,7 @@ initvampy(void)
 	Py_INCREF((PyObject*)&ParameterDescriptor_Type);
 	if (PyModule_AddObject(module,"ParameterDescriptor",(PyObject*)&ParameterDescriptor_Type) !=0) goto failure;
 	
-#ifdef _DEBUG	
-	cerr << "Vampy: extension module initialised." << endl;
-#endif
+	DSTREAM << "Vampy: extension module initialised." << endl;
 
 	return;
 	

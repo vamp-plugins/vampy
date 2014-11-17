@@ -41,6 +41,7 @@
 #include "PyPlugin.h"
 #include "PyExtensionModule.h"
 #include "PyExtensionManager.h"
+#include "Debug.h"
 #include <sstream>
 
 #ifdef _WIN32
@@ -72,7 +73,7 @@ public:
         m_pyClass(pyClass),
 		m_failed(false)
     { 
-        cerr << "PyPluginAdapter:ctor:"<< adinstcount << ": " << m_plug << endl; 
+        DSTREAM << "PyPluginAdapter:ctor:"<< adinstcount << ": " << m_plug << endl; 
         adinstcount++;
     }
     
@@ -90,9 +91,9 @@ protected:
             PyPlugin *plugin = new PyPlugin(m_plug, inputSampleRate, m_pyClass, totinstcount, numpyInstalled);
             return plugin;
         } catch (...) {
-            cerr << "PyPluginAdapter::createPlugin: Failed to construct PyPlugin" << endl;
-			// any plugin with syntax errors will fail to construct
-			m_failed = true;
+            cerr << "ERROR: PyPluginAdapter::createPlugin: Failed to construct PyPlugin" << endl;
+	    // any plugin with syntax errors will fail to construct
+	    m_failed = true;
             return 0;
         }
     }
@@ -121,14 +122,14 @@ version of Numpy is used when loading the library.
 	float numpyVersion;
 
 	/// attmept to test numpy version before importing the array API
-	cerr << "Numpy build information: ABI level: " << NPY_VERSION 
-	<< " Numpy version: " << NUMPY_SHORTVERSION << endl;
+	DSTREAM << "Numpy build information: ABI level: " << NPY_VERSION 
+		<< " Numpy version: " << NUMPY_SHORTVERSION << endl;
 	
 	PyObject *pyModule, *pyDict, *pyVer;
 	
 	pyModule = PyImport_ImportModule("numpy"); //numpy.core.multiarray
 	if (!pyModule) {
-		cerr << "Vampy was compiled with Numpy support but Numpy does not seem to be installed." << endl;
+		cerr << "ERROR: Vampy was compiled with Numpy support but Numpy does not seem to be installed." << endl;
 #ifdef __APPLE__
 		cerr << "Hint: Check if Numpy is installed for the particular setup of Python used by Vampy (given by Python exec prefix)." << endl;
 #endif		
@@ -137,32 +138,26 @@ version of Numpy is used when loading the library.
 
 	pyDict = PyModule_GetDict(pyModule); // borrowed ref
 	if (!pyDict) {
-		cerr << "Can not access Numpy module dictionary." << endl;
+		cerr << "ERROR: Can not access Numpy module dictionary." << endl;
 		goto numpyFailure;
 	}
 
 	pyVer = PyDict_GetItemString(pyDict,"__version__"); //borrowed ref
 	if (!pyVer) {
-		cerr << "Can not access Numpy version information." << endl;
+		cerr << "ERROR: Can not access Numpy version information." << endl;
 		goto numpyFailure;
 	}
 
 	ver = PyString_AsString(pyVer);
 	ver = ver.substr(0,ver.rfind("."));
-	/*
-	Applied patch from here: http://vamp-plugins.org/forum/index.php/topic,162.msg387.html#msg387 to replace this:
-    if(EOF == sscanf(ver.c_str(), "%f", &numpyVersion))
-    {
-     cerr << "Could not parse Numpy version information." << endl;
-     goto numpyFailure;
-    }*/
-	// parse version string to float
-    verStream.str(ver);
-    verStream >> numpyVersion;
 
-	cerr << "Numpy runtime version: " << numpyVersion << endl;
+	// parse version string to float
+	verStream.str(ver);
+	verStream >> numpyVersion;
+
+	DSTREAM << "Numpy runtime version: " << numpyVersion << endl;
 	if (numpyVersion < (float) NUMPY_SHORTVERSION) {
-		cerr << "Incompatible Numpy version found: " << numpyVersion << endl;
+		cerr << "ERROR: Incompatible Numpy version found: " << numpyVersion << endl;
 		goto numpyFailure;
 	}
 
@@ -173,21 +168,11 @@ version of Numpy is used when loading the library.
 	// However, we should never get to this point now anyway.
 	import_array();
 	if (PyErr_Occurred()) { 
-		cerr << "Import error while loading the Numpy Array API." << endl;
+		cerr << "ERROR: Import error while loading the Numpy Array API." << endl;
 		PyErr_Print(); PyErr_Clear(); 
 		goto numpyFailure;
 	}
 	else {
-
-#ifdef _DEBUG		
-		if (NPY_VERSION != PyArray_GetNDArrayCVersion()) {  
-			// the Import function does this check already.
-			cerr << "Warning: Numpy version mismatch. (Build version: " 
-				<< NPY_VERSION << " Runtime version: " << PyArray_GetNDArrayCVersion() << ")" << endl;
-			goto numpyFailure; 
-		}
-#endif
-
 		numpyInstalled = true;
 		arrayApiInitialised = true;
 		return;
@@ -229,7 +214,7 @@ static bool tryPreload(string name)
         return false;
     }
 #endif
-    cerr << "Preloaded Python from " << name << endl;
+    DSTREAM << "Preloaded Python from " << name << endl;
     return true;
 }
 
@@ -251,14 +236,14 @@ static bool preloadPython()
             }
         }
     }
-    cerr << "Short version: " << shortver << endl;
-	// this is useful to find out where the loaded library might be loaded from
-	cerr << "Python exec prefix: " << Py_GetExecPrefix() << endl;
+    DSTREAM << "Short version: " << shortver << endl;
+    // this is useful to find out where the loaded library might be loaded from
+    DSTREAM << "Python exec prefix: " << Py_GetExecPrefix() << endl;
 
     char *pylib = getenv("VAMPY_PYLIB");
     if (pylib && *pylib) {
-        cerr << "Trying to preload Python from specified location " << pylib
-	    << "..." << endl;
+        DSTREAM << "Trying to preload Python from specified location " << pylib
+		<< "..." << endl;
         return tryPreload(string(pylib));
     } 
 
@@ -305,8 +290,8 @@ const VampPluginDescriptor
     if (version < 1) return 0;
 
 	int isPythonInitialized = Py_IsInitialized();
-	cerr << "# isPythonInitialized: " << isPythonInitialized << endl;
-	cerr << "# haveScannedPlugins: " << haveScannedPlugins << endl;
+	DSTREAM << "# isPythonInitialized: " << isPythonInitialized << endl;
+	DSTREAM << "# haveScannedPlugins: " << haveScannedPlugins << endl;
 
 	if (!haveScannedPlugins) {
 
@@ -319,9 +304,7 @@ const VampPluginDescriptor
 			Py_Initialize();
 			array_API_initialiser();
 			initvampy();
-#ifdef _DEBUG			
-		    cerr << "# isPythonInitialized after initialize: " << Py_IsInitialized() << endl;
-#endif		
+			DSTREAM << "# isPythonInitialized after initialize: " << Py_IsInitialized() << endl;
 		}
 
 		vector<string> pyPlugs;
@@ -330,7 +313,7 @@ const VampPluginDescriptor
 		static PyPlugScanner *scanner;
 		
 		//Scanning Plugins
-		cerr << "Scanning Vampy Plugins" << endl;
+		DSTREAM << "Scanning Vampy Plugins" << endl;
 		scanner = PyPlugScanner::getInstance();
 
 		// added env. varable support VAMPY_EXTPATH
@@ -341,10 +324,10 @@ const VampPluginDescriptor
 		// VAMPY_COMPILED=1 to recognise .pyc files (default is 1)
 		pyPlugs = scanner->getPyPlugs();
 
-		cerr << "Found " << pyPlugs.size() << " Scripts." << endl;
+		DSTREAM << "Found " << pyPlugs.size() << " Scripts." << endl;
 		//TODO: should this support multiple classes per script (?)
 		pyClasses = scanner->getPyClasses();
-		cerr << "Found " << pyClasses.size() << " Classes." << endl;
+		DSTREAM << "Found " << pyClasses.size() << " Classes." << endl;
 
 		for (size_t i = 0; i < pyPlugs.size(); ++i) {
 			adapters.push_back( new PyPluginAdapter(pyPlugs[i],pyClasses[i]));
@@ -355,9 +338,7 @@ const VampPluginDescriptor
 		haveScannedPlugins=true;
 	}
 
-#ifdef _DEBUG
-	cerr << "Accessing adapter index: " << index << " (adapters: " << adapters.size() << ")" << endl;
-#endif	
+	DSTREAM << "Accessing adapter index: " << index << " (adapters: " << adapters.size() << ")" << endl;
 
 	if (index<adapters.size()) {
 

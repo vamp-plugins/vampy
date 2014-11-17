@@ -49,7 +49,7 @@
 #define _CLASS_METHOD_ m_class << "::" << method
 #define PLUGIN_ERROR "ERROR: In Vampy plugin [" << _CLASS_METHOD_ << "]" << endl << "Cause: "
 #define DEBUG_NAME "[Vampy::call] " << _CLASS_METHOD_ << " "
-#define DEAFULT_RETURN "Method [" << _CLASS_METHOD_ << "] is not implemented. Returning default value."
+#define DEFAULT_RETURN "Method [" << _CLASS_METHOD_ << "] is not implemented. Returning default value."
 #define FLAG_VALUE "Flag: " << flagName << ": " << ((rValue==0)?"False":"True")
 
 #include <Python.h>
@@ -171,7 +171,7 @@ protected:
 			}
 			return rValue;
 		}
-		if (m_debugFlag) cerr << DEAFULT_RETURN << endl;
+		if (m_debugFlag) cerr << DEFAULT_RETURN << endl;
 		return rValue;
 	}
 
@@ -182,7 +182,7 @@ protected:
 		RET rValue = RET();
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
 		if (!PyObject_HasAttrString(m_pyInstance,method)) {
-			if (m_debugFlag) cerr << DEAFULT_RETURN << endl;
+			if (m_debugFlag) cerr << DEFAULT_RETURN << endl;
 			return rValue;
 		}
 		
@@ -248,7 +248,7 @@ protected:
 		RET rValue = RET();
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
 		if (!PyObject_HasAttrString(m_pyInstance,method)) {
-			if (m_debugFlag) cerr << DEAFULT_RETURN << endl;
+			if (m_debugFlag) cerr << DEFAULT_RETURN << endl;
 			return rValue;
 		}
 		
@@ -320,7 +320,7 @@ protected:
 		RET rValue = RET();
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
 		if (!PyObject_HasAttrString(m_pyInstance,method)) {
-			if (m_debugFlag) cerr << DEAFULT_RETURN << endl;
+			if (m_debugFlag) cerr << DEFAULT_RETURN << endl;
 			return rValue;
 		}
 		

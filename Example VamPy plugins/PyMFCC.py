@@ -52,16 +52,16 @@ class melScaling(object):
 		if self.updated: return self.valid
 		self.updated = True
 		self.valid = False
-		print 'Updating parameters and recalculating filters: '
-		print 'Nyquist: ',self.NqHz
+#		print 'Updating parameters and recalculating filters: '
+#		print 'Nyquist: ',self.NqHz
 		
 		if self.maxHz > self.NqHz : 
 			raise Exception('Maximum frequency must be smaller than the Nyquist frequency')
 		
 		self.maxMel = 1000*log(1+self.maxHz/700.0)/log(1+1000.0/700.0)
 		self.minMel = 1000*log(1+self.minHz/700.0)/log(1+1000.0/700.0)
-		print 'minHz:%s\nmaxHz:%s\nminMel:%s\nmaxMel:%s\n' \
-		%(self.minHz,self.maxHz,self.minMel,self.maxMel)
+#		print 'minHz:%s\nmaxHz:%s\nminMel:%s\nmaxMel:%s\n' \
+#		%(self.minHz,self.maxHz,self.minMel,self.maxMel)
 		self.filterMatrix = self.getFilterMatrix(self.inputSize,self.numBands)
 		self.DCTMatrix = self.getDCTMatrix(self.numBands)
 		self.filterIter = self.filterMatrix.__iter__()
@@ -124,7 +124,7 @@ class PyMFCC(melScaling):
 	def __init__(self,inputSampleRate):
 		
 		# flags for setting some Vampy options
-		self.vampy_flags = vf_DEBUG | vf_ARRAY | vf_REALTIME
+		self.vampy_flags = vf_ARRAY | vf_REALTIME
 
 		self.m_inputSampleRate = int(inputSampleRate)
 		self.m_stepSize = 1024
