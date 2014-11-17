@@ -35,7 +35,6 @@ from math import sqrt
 class PySpectralCentroid: 
 	
 	def __init__(self,inputSampleRate): 
-		self.m_imputSampleRate = 0.0 
 		self.m_stepSize = 0
 		self.m_blockSize = 0
 		self.m_channels = 0

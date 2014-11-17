@@ -1,7 +1,7 @@
 
-CXXFLAGS	:= -D_DEBUG -DHAVE_NUMPY -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.5 -I/Library/Frameworks/Python.framework/Versions/2.5/lib/python2.5/site-packages/numpy/core/include/
+CXXFLAGS	:= -DHAVE_NUMPY -mmacosx-version-min=10.6 -I../vamp-plugin-sdk -O2 -Wall -I/usr/include/python2.7 -I/usr/local/lib/python2.7/site-packages/numpy/core/include
 
-LDFLAGS		:= -install_name vampy.dylib -exported_symbols_list vamp-plugin.list ../vamp-plugin-sdk/libvamp-sdk.a -dynamiclib -lpython2.5 -lpthread
+LDFLAGS		:= -install_name vampy.dylib -exported_symbols_list vamp-plugin.list -mmacosx-version-min=10.6 ../vamp-plugin-sdk/libvamp-sdk.a -dynamiclib -lpython2.7 -lpthread
 
 default: vampy.dylib 
 all: vampy.dylib vampymod.so

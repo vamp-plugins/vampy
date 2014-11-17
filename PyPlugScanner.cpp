@@ -153,7 +153,7 @@ PyPlugScanner::getScriptClass(string path, string classname)
 	//Import it as a module into the py interpreter
 	PyObject *pyModule = PyImport_Import(pySource);
 	PyObject* pyError = PyErr_Occurred();
-	if (! pyError == 0) { 
+	if (pyError) { 
 		cerr << "ERROR: error importing source: " << classname << endl; 
 		PyErr_Print(); 
 		Py_DECREF(pySource); 

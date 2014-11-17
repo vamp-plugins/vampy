@@ -31,7 +31,7 @@
 // Vampy will not attempt to load a lower version than specified
 #ifdef HAVE_NUMPY
 #ifndef NUMPY_SHORTVERSION
-#define NUMPY_SHORTVERSION 1.1 
+#define NUMPY_SHORTVERSION 1.9
 #endif
 #endif
 

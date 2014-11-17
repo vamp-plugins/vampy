@@ -182,11 +182,16 @@ PyTypeInterface::PyValue_To_Size_t(PyObject* pyValue) const
 			setValueError("Error while converting integer object.",m_strict);
 			return 0;
 		}
+		// this test is nonsense -- neither part can occur
+		// owing to range of data types -- size_t is at least
+		// as big as long, and unsigned is always non-negative
+/*
 		if ((unsigned long)rValue > SIZE_T_MAX || (unsigned long)rValue < 0)
 		{
 			setValueError("Overflow error. Object can not be converted to size_t.",m_strict);
 			return 0;
 		}
+*/
 		return (size_t) rValue;
 	}
 	
@@ -717,7 +722,7 @@ PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const
 		std::string msg = "NumPy array must be a one dimensional vector.";
 		setValueError(msg,m_strict);
 #ifdef _DEBUG
-		cerr << "PyTypeInterface::PyArray_To_FloatVector failed. Error: " << msg << " Dims: " << (int) pyArray->nd << endl;
+		cerr << "PyTypeInterface::PyArray_To_FloatVector failed. Error: " << msg << " Dims: " << (int) PyArray_NDIM(pyArray) << endl;
 #endif	
 		return Output;
 	}
