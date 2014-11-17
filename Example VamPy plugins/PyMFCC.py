@@ -39,12 +39,17 @@ class melScaling(object):
 		self.sampleRate = sampleRate
 		self.NqHz = sampleRate / 2.0
 		self.minHz = minHz
-		if maxHz is None : maxHz = self.NqHz
+		if maxHz is None : maxHz = 11025
 		self.maxHz = maxHz
 		self.inputSize = inputSize
 		self.numBands = numBands
 		self.valid = False
 		self.updated = False
+		
+	def reset(self):
+		# reset any initial conditions
+                self.updated = False
+		return None
 		
 	def update(self): 
 		# make sure this will run only once 
@@ -52,16 +57,16 @@ class melScaling(object):
 		if self.updated: return self.valid
 		self.updated = True
 		self.valid = False
-#		print 'Updating parameters and recalculating filters: '
-#		print 'Nyquist: ',self.NqHz
-		
-		if self.maxHz > self.NqHz : 
-			raise Exception('Maximum frequency must be smaller than the Nyquist frequency')
-		
-		self.maxMel = 1000*log(1+self.maxHz/700.0)/log(1+1000.0/700.0)
-		self.minMel = 1000*log(1+self.minHz/700.0)/log(1+1000.0/700.0)
-#		print 'minHz:%s\nmaxHz:%s\nminMel:%s\nmaxMel:%s\n' \
-#		%(self.minHz,self.maxHz,self.minMel,self.maxMel)
+                # print 'Updating parameters and recalculating filters: '
+                # print 'Nyquist: ',self.NqHz
+                maxHz = self.maxHz
+		if maxHz > self.NqHz : maxHz = self.NqHz
+		minHz = self.minHz
+                if minHz > self.NqHz : minHz = self.NqHz
+		self.maxMel = 1000*log(1+maxHz/700.0)/log(1+1000.0/700.0)
+		self.minMel = 1000*log(1+minHz/700.0)/log(1+1000.0/700.0)
+                # print 'minHz:%s\nmaxHz:%s\nminMel:%s\nmaxMel:%s\n' \
+                # %(self.minHz,self.maxHz,self.minMel,self.maxMel)
 		self.filterMatrix = self.getFilterMatrix(self.inputSize,self.numBands)
 		self.DCTMatrix = self.getDCTMatrix(self.numBands)
 		self.filterIter = self.filterMatrix.__iter__()
@@ -114,9 +119,10 @@ class melScaling(object):
 		
 	def getMFCCs(self,warpedSpectrum,cn=True):
 		'''Compute MFCC coefficients from Mel warped magnitude spectrum.'''
-		mfccs=self.dct(numpy.log(warpedSpectrum))
-		if cn is False : mfccs[0] = 0.0
-		return mfccs
+                eps = 1e-8
+                mfccs=self.dct(numpy.log(warpedSpectrum + eps))
+                if cn is False : mfccs[0] = 0.0
+                return mfccs
 	
 
 class PyMFCC(melScaling): 
@@ -272,13 +278,9 @@ class PyMFCC(melScaling):
 	def setParameter(self,paramid,newval):
 		self.valid = False
 		if paramid == 'minHz' :
-			if newval < self.maxHz and newval < self.NqHz :
-				self.minHz = float(newval)
+                        self.minHz = float(newval)
 		if paramid == 'maxHz' :
-			if newval < self.NqHz and newval > self.minHz+1000 :
-				self.maxHz = float(newval)
-			else :
-				self.maxHz = self.NqHz
+                        self.maxHz = float(newval)
 		if paramid == 'cnull' :
 			self.cnull = int(not int(newval))
 		if paramid == 'melbands' :

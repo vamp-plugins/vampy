@@ -41,7 +41,7 @@ class PySpectralCentroid:
 		self.m_channels = 0
 		self.previousSample = 0.0
 		self.m_inputSampleRate = inputSampleRate
-		self.threshold = 0.00
+		self.threshold = 0.05
 		
 	def initialise(self,channels,stepSize,blockSize):
 		self.m_channels = channels
@@ -83,7 +83,7 @@ class PySpectralCentroid:
 		thd = ParameterDescriptor()
 		thd.identifier='threshold'
 		thd.name='Noise threshold'
-		thd.description='Return null or delete this function if not needed.'
+		thd.description='Magnitude below which a process block will be disregarded and zero returned'
 		thd.unit='v'
 		thd.minValue=0.0
 		thd.maxValue=0.5

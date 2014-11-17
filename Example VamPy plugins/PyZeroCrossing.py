@@ -86,7 +86,7 @@ class PyZeroCrossing:
 		paramlist1={
 		'identifier':'threshold',
 		'name':'Noise threshold',
-		'description':'',
+		'description':'Magnitude below which a process block will be considered to be all zero',
 		'unit':'v',
 		'minValue':0.0,
 		'maxValue':0.5,

@@ -40,7 +40,7 @@ class PySpectralFeatures:
 		
 	def reset(self):
 		# reset any initial conditions
-		self.prevMag = zeros((blockSize/2))
+		self.prevMag = zeros((self.m_blockSize/2))
 		return None
 	
 	def getMaker(self):
@@ -102,7 +102,7 @@ class PySpectralFeatures:
 		threshold = ParameterDescriptor()
 		threshold.identifier='threshold'
 		threshold.name='Noise threshold'
-		threshold.description='Noise threshold'
+		threshold.description='Magnitude below which a process block will be disregarded and zeroes returned'
 		threshold.unit='v'
 		threshold.minValue=0
 		threshold.maxValue=1
