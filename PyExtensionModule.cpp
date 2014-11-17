@@ -149,7 +149,7 @@ PyMethodDef VampyMethods[] = {
 // PyDoc_STRVAR(vampy_doc,"This module exposes Vamp plugin data type wrappers.");
 
 static int
-setint(PyObject *d, char *name, int value)
+setint(PyObject *d, const char *name, int value)
 {
 	PyObject *v;
 	int err;
@@ -160,7 +160,7 @@ setint(PyObject *d, char *name, int value)
 }
 
 static int
-setdbl(PyObject *d, char *name, double value)
+setdbl(PyObject *d, const char *name, double value)
 {
 	PyObject *v;
 	int err;
@@ -171,7 +171,7 @@ setdbl(PyObject *d, char *name, double value)
 }
 
 static int
-setstr(PyObject *d, char *name, char *value)
+setstr(PyObject *d, const char *name, const char *value)
 {
 	PyObject *v;
 	int err;

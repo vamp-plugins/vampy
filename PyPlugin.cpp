@@ -310,7 +310,7 @@ PyPlugin::getRemainingFeatures()
 }
 
 bool
-PyPlugin::getBooleanFlag(char flagName[], bool defValue = false) const
+PyPlugin::getBooleanFlag(const char flagName[], bool defValue = false) const
 {
 	bool rValue = defValue;
 	if (PyObject_HasAttrString(m_pyInstance,flagName))
@@ -333,7 +333,7 @@ PyPlugin::getBooleanFlag(char flagName[], bool defValue = false) const
 }
 
 int
-PyPlugin::getBinaryFlags(char flagName[], eVampyFlags defValue = vf_NULL) const
+PyPlugin::getBinaryFlags(const char flagName[], eVampyFlags defValue = vf_NULL) const
 {
 	int rValue = defValue;
 	if (PyObject_HasAttrString(m_pyInstance,flagName))
@@ -429,7 +429,7 @@ PyPlugin::setProcessType()
 }
 
 void
-PyPlugin::typeErrorHandler(char *method, bool process) const
+PyPlugin::typeErrorHandler(const char *method, bool process) const
 {
 	bool strict = false;
 	while (m_ti.error) { 

@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
 
  * Vampy : This plugin is a wrapper around the Vamp plugin API.
@@ -14,6 +15,7 @@
 #ifdef HAVE_NUMPY
 #define PY_ARRAY_UNIQUE_SYMBOL VAMPY_ARRAY_API
 #define NO_IMPORT_ARRAY
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/arrayobject.h"
 #endif
 
@@ -40,7 +42,7 @@ static std::map<std::string, eFeatureFields> ffKeys;
 static bool isMapInitialised = false;
 
 /*  Note: NO FUNCTION IN THIS CLASS SHOULD ALTER REFERENCE COUNTS
-	(EXCEPT FOR TEMPORARY PYTHON OBJECTS)!  						 */
+	(EXCEPT FOR TEMPORARY PYTHON OBJECTS)! */
 
 PyTypeInterface::PyTypeInterface() : 
 	m_strict(false),
@@ -698,10 +700,10 @@ PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const
 #endif
 
 	PyArrayObject* pyArray = (PyArrayObject*) pyValue;
-	PyArray_Descr* descr = pyArray->descr;
+	PyArray_Descr* descr = PyArray_DESCR(pyArray);
 	
 	/// check raw data and descriptor pointers
-	if (pyArray->data == 0 || descr == 0) {
+	if (PyArray_DATA(pyArray) == 0 || descr == 0) {
 		std::string msg = "NumPy array with NULL data or descriptor pointer encountered.";
 		setValueError(msg,m_strict);
 #ifdef _DEBUG
@@ -711,7 +713,7 @@ PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const
 	}
 
 	/// check dimensions
-	if (pyArray->nd != 1) {
+	if (PyArray_NDIM(pyArray) != 1) {
 		std::string msg = "NumPy array must be a one dimensional vector.";
 		setValueError(msg,m_strict);
 #ifdef _DEBUG
@@ -725,19 +727,19 @@ PyTypeInterface::PyArray_To_FloatVector (PyObject *pyValue) const
 #endif
 	
 	/// check strides (useful if array is not continuous)
-	size_t strides =  *((size_t*) pyArray->strides);
+	size_t strides =  *((size_t*) PyArray_STRIDES(pyArray));
     
 	/// convert the array
 	switch (descr->type_num)
 	{
 		case NPY_FLOAT : // dtype='float32'
-			return PyArray_Convert<float,float>(pyArray->data,pyArray->dimensions[0],strides);
+			return PyArray_Convert<float,float>(PyArray_DATA(pyArray),PyArray_DIMS(pyArray)[0],strides);
 		case NPY_DOUBLE : // dtype='float64'
-			return PyArray_Convert<float,double>(pyArray->data,pyArray->dimensions[0],strides);
+			return PyArray_Convert<float,double>(PyArray_DATA(pyArray),PyArray_DIMS(pyArray)[0],strides);
 		case NPY_INT : // dtype='int'
-			return PyArray_Convert<float,int>(pyArray->data,pyArray->dimensions[0],strides);
+			return PyArray_Convert<float,int>(PyArray_DATA(pyArray),PyArray_DIMS(pyArray)[0],strides);
 		case NPY_LONG : // dtype='long'
-			return PyArray_Convert<float,long>(pyArray->data,pyArray->dimensions[0],strides);
+			return PyArray_Convert<float,long>(PyArray_DATA(pyArray),PyArray_DIMS(pyArray)[0],strides);
 		default :
 			std::string msg = "Unsupported value type in NumPy array object.";
 			setValueError(msg,m_strict);

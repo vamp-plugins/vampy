@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
 
  * Vampy : This plugin is a wrapper around the Vamp plugin API.
@@ -14,7 +15,8 @@
 #ifdef HAVE_NUMPY
 
 // define a unique API pointer 
-#define PY_ARRAY_UNIQUE_SYMBOL VAMPY_ARRAY_API 
+#define PY_ARRAY_UNIQUE_SYMBOL VAMPY_ARRAY_API
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/arrayobject.h"
 
 // prevent building with very old versions of numpy

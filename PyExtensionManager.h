@@ -65,7 +65,7 @@ public:
 	void deleteModuleName(string plugKey);
 
 private:
-	static char* m_exposedNames[];
+	static const char* m_exposedNames[];
 	
 	vector<string> m_plugModuleNames;
 	PyObject* m_pyGlobalNamespace;

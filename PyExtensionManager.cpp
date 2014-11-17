@@ -22,7 +22,7 @@ using std::vector;
 using std::find;
 
 //static
-char* PyExtensionManager::m_exposedNames[] = {
+const char* PyExtensionManager::m_exposedNames[] = {
 		"ParameterDescriptor",
 		"OutputDescriptor",
 		"ParameterList",
@@ -152,7 +152,7 @@ PyExtensionManager::cleanLocalNamespace(const char* plugModuleName) const
 	
 	int i = 0;
 	while (PyExtensionManager::m_exposedNames[i]) {
-		char* name = PyExtensionManager::m_exposedNames[i];
+		const char* name = PyExtensionManager::m_exposedNames[i];
 		i++;
 		PyObject *key = PyString_FromString(name);
 		if (!key) break;

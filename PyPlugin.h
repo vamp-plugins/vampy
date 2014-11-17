@@ -129,17 +129,17 @@ protected:
 	
 	FeatureSet processMethodCall(const float *const *inputBuffers,Vamp::RealTime timestamp);
 
-	bool getBooleanFlag(char flagName[],bool) const;
-	int getBinaryFlags(char flagName[], eVampyFlags) const;
-	void typeErrorHandler(char *method, bool process = false) const;
+	bool getBooleanFlag(const char flagName[],bool) const;
+	int getBinaryFlags(const char flagName[], eVampyFlags) const;
+	void typeErrorHandler(const char *method, bool process = false) const;
 
 	/// simple 'void return' call with no args
-	void genericMethodCall(char *method) const
+	void genericMethodCall(const char *method) const
 	{
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
 		if ( PyObject_HasAttrString(m_pyInstance,method) ) 
 		{
-			PyObject *pyValue = PyObject_CallMethod(m_pyInstance, method, NULL);
+		    PyObject *pyValue = PyObject_CallMethod(m_pyInstance, (char *)method, NULL);
 			if (!pyValue) {
 				cerr << PLUGIN_ERROR << "Failed to call method." << endl;
 				if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
@@ -149,12 +149,12 @@ protected:
 
 	/// 'no arg with default return value' call
 	template<typename RET> 
-	RET &genericMethodCall(char *method, RET &rValue) const
+	RET &genericMethodCall(const char *method, RET &rValue) const
 	{
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
 		if ( PyObject_HasAttrString(m_pyInstance,method) ) 
 		{
-			PyObject *pyValue = PyObject_CallMethod(m_pyInstance, method, NULL);
+		    PyObject *pyValue = PyObject_CallMethod(m_pyInstance, (char *)method, NULL);
 			if (!pyValue) {
 				cerr << PLUGIN_ERROR << "Failed to call method." << endl;
 				if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
@@ -177,7 +177,7 @@ protected:
 
 	/// unary call
 	template<typename RET,typename A1>
-	RET genericMethodCallArgs(char *method, A1 arg1) const
+	RET genericMethodCallArgs(const char *method, A1 arg1) const
 	{
 		RET rValue = RET();
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
@@ -243,7 +243,7 @@ protected:
 
 	/// binary call
 	template<typename RET,typename A1,typename A2>
-	RET genericMethodCallArgs(char *method, A1 arg1, A2 arg2) const
+	RET genericMethodCallArgs(const char *method, A1 arg1, A2 arg2) const
 	{
 		RET rValue = RET();
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;
@@ -315,7 +315,7 @@ protected:
 
 	/// trenary call
 	template<typename RET,typename A1,typename A2,typename A3>
-	RET genericMethodCallArgs(char *method, A1 arg1, A2 arg2, A3 arg3) const
+	RET genericMethodCallArgs(const char *method, A1 arg1, A2 arg2, A3 arg3) const
 	{
 		RET rValue = RET();
 		if (m_debugFlag) cerr << DEBUG_NAME << endl;

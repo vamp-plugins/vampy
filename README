@@ -16,7 +16,7 @@ WHAT IS IT FOR?
 
 	Vamp plugins are typically written in C++. Although currently
 	available plugin hosts are valuable tools in audio research,
-    the long and tedious development cycle of plugins does not 
+	the long and tedious development cycle of plugins does not 
 	support quick prototyping of feature extraction algorithms.
 	Learning the extra skills needed for plugin development or using 
 	scientific libraries available for C and C++ is often outside 
@@ -74,7 +74,7 @@ OBTAINING VAMPY:
 
 DEPENDENCIES:
 
-	* Vampy requires Python 2.5 or greater. 
+	* Vampy requires Python 2.7.
 	
 	Note that Vampy does not support the new flavour of Python (3.x) 
 	which breaks language compatibility with the 2.x series.
@@ -166,7 +166,7 @@ BACKWARD COMPATIBILITY (Read this if you used Vampy 1):
 
 USING VAMPY:	
 
-	(1) Make sure you have Python 2.5 or greater installed and you
+	(1) Make sure you have Python 2.7 installed and you
 		have a recent Vamp plugin host application. 
 		(e.g. Sonic Visualier)
 

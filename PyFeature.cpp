@@ -55,12 +55,12 @@ Feature_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 	if (!kw || !PyDict_Size(kw)) return (PyObject *) self;
 	PyDict_Merge(self->dict,kw,0);
 
-	static char *kwlist[] = {"timestamp", "hasTimestamp", "duration", "hasDuration", 0};
+	static const char *kwlist[] = {"timestamp", "hasTimestamp", "duration", "hasDuration", 0};
 
 	int i = 0;
 	while (kwlist[i]) {
-		char* name = kwlist[i];
-		char* attr = kwlist[++i];
+		const char* name = kwlist[i];
+		const char* attr = kwlist[++i];
 		i++;
 		PyObject *key = PyString_FromString(name);
 		if (!key) break;

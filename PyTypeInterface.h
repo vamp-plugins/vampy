@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
 
  * Vampy : This plugin is a wrapper around the Vamp plugin API.
@@ -20,6 +21,7 @@ and basic C/C++ types and Vamp API types.
 #ifdef HAVE_NUMPY
 #define PY_ARRAY_UNIQUE_SYMBOL VAMPY_ARRAY_API
 #define NO_IMPORT_ARRAY
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/arrayobject.h"
 #endif
 #include "PyExtensionModule.h"
@@ -296,7 +298,7 @@ public:
 
 	/// Convert DTYPE type 1D NumpyArray to std::vector<RET>
 	template<typename RET, typename DTYPE>
-	std::vector<RET> PyArray_Convert(char* raw_data_ptr, long length, size_t strides) const
+	std::vector<RET> PyArray_Convert(void* raw_data_ptr, long length, size_t strides) const
 	{
 		std::vector<RET> rValue;
 		
@@ -577,8 +579,10 @@ if this can be trusted, especially for more than 2 channels.
 		PyObject *pyChannelArray = 
 			//args: (dimensions, size in each dim, type kind, pointer to continuous array)
 			PyArray_SimpleNewFromData(1, ndims, typenum, (void*) inputBuffers[i]);
-		// make it read-only: set all flags to false except NPY_C_CONTIGUOUS 
-		((PyArrayObject*)pyChannelArray)->flags = NPY_C_CONTIGUOUS;
+		// make it read-only: set all flags to false except NPY_C_CONTIGUOUS
+		//!!! what about NPY_ARRAY_OWNDATA?
+		PyArray_CLEARFLAGS((PyArrayObject *)pyChannelArray, 0xff);
+		PyArray_ENABLEFLAGS((PyArrayObject *)pyChannelArray, NPY_ARRAY_C_CONTIGUOUS);
 		pyChannelListArray[i] = pyChannelArray;
 	}
 	return pyChannelList;
