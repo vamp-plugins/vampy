@@ -7,16 +7,8 @@ CXXFLAGS	:= -DHAVE_NUMPY \
 LDFLAGS		:= -shared -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython2.7 -lpthread -Wl,--version-script=vamp-plugin.map
 
 default: vampy.so 
-all: vampy.so vampymod.so
 
-PyExtensionModule.a: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
-	ar cr $@ $^
-
-# The standard python extension is .so (even on the Mac)
-vampymod.so: PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o 
-	g++ $^ -o $@ $(LDFLAGS) 
-
-vampy.so: PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.a  PyExtensionManager.o
+vampy.so:   PyRealTime.o PyFeature.o PyFeatureSet.o PyParameterDescriptor.o PyOutputDescriptor.o PyTypeConversions.o PyExtensionModule.o PyPlugin.o PyPlugScanner.o Mutex.o PyExtensionManager.o PyTypeInterface.o vampy-main.o
 	g++ $^ -o $@ $(LDFLAGS) 
 
 # Install plugin
@@ -33,9 +25,52 @@ install:
 
 installplug : install
 cleanplug : clean
+depend:
+	makedepend -Y -fMakefile.linux *.cpp *.h
 
 clean:	
 	rm -f *.o
 	rm -f *.a
 	rm -f *$(PLUGIN_EXT)
 
+# DO NOT DELETE
+
+Mutex.o: Mutex.h
+PyExtensionManager.o: PyExtensionModule.h PyRealTime.h PyFeature.h
+PyExtensionManager.o: PyFeatureSet.h PyParameterDescriptor.h
+PyExtensionManager.o: PyOutputDescriptor.h PyExtensionManager.h Debug.h
+PyExtensionModule.o: PyExtensionModule.h PyRealTime.h PyFeature.h
+PyExtensionModule.o: PyFeatureSet.h PyParameterDescriptor.h
+PyExtensionModule.o: PyOutputDescriptor.h Debug.h
+PyFeature.o: PyExtensionModule.h PyRealTime.h PyFeature.h PyFeatureSet.h
+PyFeature.o: PyParameterDescriptor.h PyOutputDescriptor.h
+PyFeatureSet.o: PyFeatureSet.h
+PyOutputDescriptor.o: PyOutputDescriptor.h PyTypeInterface.h
+PyOutputDescriptor.o: PyExtensionModule.h PyRealTime.h PyFeature.h
+PyOutputDescriptor.o: PyFeatureSet.h PyParameterDescriptor.h
+PyParameterDescriptor.o: PyParameterDescriptor.h PyTypeInterface.h
+PyParameterDescriptor.o: PyExtensionModule.h PyRealTime.h PyFeature.h
+PyParameterDescriptor.o: PyFeatureSet.h PyOutputDescriptor.h
+PyPlugin.o: PyPlugin.h PyExtensionModule.h PyRealTime.h PyFeature.h
+PyPlugin.o: PyFeatureSet.h PyParameterDescriptor.h PyOutputDescriptor.h
+PyPlugin.o: PyTypeInterface.h Mutex.h Debug.h
+PyPlugScanner.o: PyPlugScanner.h
+PyRealTime.o: PyRealTime.h
+PyTypeConversions.o: PyTypeConversions.h PyRealTime.h PyExtensionModule.h
+PyTypeConversions.o: PyFeature.h PyFeatureSet.h PyParameterDescriptor.h
+PyTypeConversions.o: PyOutputDescriptor.h
+PyTypeInterface.o: PyTypeInterface.h PyExtensionModule.h PyRealTime.h
+PyTypeInterface.o: PyFeature.h PyFeatureSet.h PyParameterDescriptor.h
+PyTypeInterface.o: PyOutputDescriptor.h
+vampy-main.o: PyPlugScanner.h PyPlugin.h PyExtensionModule.h PyRealTime.h
+vampy-main.o: PyFeature.h PyFeatureSet.h PyParameterDescriptor.h
+vampy-main.o: PyOutputDescriptor.h PyTypeInterface.h Mutex.h
+vampy-main.o: PyExtensionManager.h Debug.h
+PyExtensionModule.o: PyRealTime.h PyFeature.h PyFeatureSet.h
+PyExtensionModule.o: PyParameterDescriptor.h PyOutputDescriptor.h
+PyPlugin.o: PyExtensionModule.h PyRealTime.h PyFeature.h PyFeatureSet.h
+PyPlugin.o: PyParameterDescriptor.h PyOutputDescriptor.h PyTypeInterface.h
+PyPlugin.o: Mutex.h
+PyTypeInterface.o: PyExtensionModule.h PyRealTime.h PyFeature.h
+PyTypeInterface.o: PyFeatureSet.h PyParameterDescriptor.h
+PyTypeInterface.o: PyOutputDescriptor.h

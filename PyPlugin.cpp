@@ -87,8 +87,12 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
 	if (m_debugFlag && m_quitOnErrorFlag) cerr << "Quit on type error ON for: " << m_class << endl;
    
 	if (m_debugFlag && st_flag) cerr << "Strict type conversion ON for: " << m_class << endl;
+
 	m_ti.setStrictTypingFlag(st_flag);
+	m_tc.setStrictTypingFlag(st_flag);
+
 	m_ti.setNumpyInstalled(m_numpyInstalled);
+	m_tc.setNumpyInstalled(m_numpyInstalled);
 
 }
 
@@ -318,8 +322,8 @@ PyPlugin::getBooleanFlag(const char flagName[], bool defValue = false) const
 		{
 			if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
 		} else {
-			rValue = m_ti.PyValue_To_Bool(pyValue);
-			if (m_ti.error) { 
+			rValue = m_tc.PyValue_To_Bool(pyValue);
+			if (m_tc.error) { 
 				Py_CLEAR(pyValue);
 				typeErrorHandler(flagName);
 				rValue = defValue;
@@ -341,8 +345,8 @@ PyPlugin::getBinaryFlags(const char flagName[], eVampyFlags defValue = vf_NULL) 
 		{
 			if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
 		} else {
-			rValue |= (int) m_ti.PyValue_To_Size_t(pyValue);
-			if (m_ti.error) { 
+			rValue |= (int) m_tc.PyValue_To_Size_t(pyValue);
+			if (m_tc.error) { 
 				Py_CLEAR(pyValue);
 				typeErrorHandler(flagName);
 				rValue = defValue;
@@ -430,8 +434,10 @@ void
 PyPlugin::typeErrorHandler(const char *method, bool process) const
 {
 	bool strict = false;
-	while (m_ti.error) { 
-		PyTypeInterface::ValueError e = m_ti.getError();
+	while (m_tc.error || m_ti.error) {
+	    ValueError e;
+	    if (m_tc.error) e = m_tc.getError();
+	    else e = m_ti.getError();
 #ifdef HAVE_NUMPY
 		// disable the process completely if numpy types are returned 
 		// but a compatible version was not loaded.
