@@ -741,6 +741,16 @@ PyTypeConversions::PyArray_To_FloatVector (PyObject *pyValue) const
 }
 #endif
 
+PyObject *
+PyTypeConversions::PyValue_From_StringVector(const std::vector<std::string> &v) const
+{
+	PyObject *pyList = PyList_New(v.size());
+	for (size_t i = 0; i < v.size(); ++i) {
+		PyObject *pyStr = PyString_FromString(v[i].c_str());
+		PyList_SET_ITEM(pyList, i, pyStr);
+	}
+	return pyList;
+}
 
 
 /*			   			  	Error handling		   			  		*/

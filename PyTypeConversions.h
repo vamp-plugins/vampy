@@ -98,6 +98,8 @@ public:
 	std::vector<float> PyValue_To_FloatVector (PyObject*) const;
 	std::vector<float> PyList_To_FloatVector (PyObject*) const;
 
+	PyObject *PyValue_From_StringVector(const std::vector<std::string> &) const;
+	
 	// Numpy types
 #ifdef HAVE_NUMPY
 	std::vector<float> PyArray_To_FloatVector (PyObject *pyValue) const;
