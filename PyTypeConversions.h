@@ -136,7 +136,7 @@ public:
 	}
 
 	/// this is a special case. numpy.float64 has an array conversions but no array descriptor
-	inline std::vector<float> PyArray0D_Convert(PyArrayInterface *ai) const
+	std::vector<float> PyArray0D_Convert(PyArrayInterface *ai) const
 	{
 		std::vector<float> rValue;
 		if ((ai->typekind) == *"f") 

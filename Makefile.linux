@@ -4,7 +4,7 @@ CXXFLAGS	:= -DHAVE_NUMPY \
 		-I/usr/include/python2.7 \
 		-I/usr/lib/python2.7/dist-packages/numpy/core/include
 
-LDFLAGS		:= -shared -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython2.7 -lpthread -Wl,--version-script=vamp-plugin.map
+LDFLAGS		:= -shared -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -Wl,-z,defs -lpython2.7 -lpthread -Wl,--version-script=vamp-plugin.map -ldl
 
 default: vampy.so 
 

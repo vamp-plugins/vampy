@@ -475,3 +475,100 @@ PyPlugin::typeErrorHandler(const char *method, bool process) const
 	
 }
 
+/// optimised process call
+PyPlugin::FeatureSet
+PyPlugin::processMethodCall(const float *const *inputBuffers,Vamp::RealTime timestamp)
+{
+
+	/// Optimizations: 1) we avoid ...ObjArg functions since we know
+	/// the number of arguments, and we don't like va_list parsing 
+	/// in the process. 2) Also: we're supposed to incref args, 
+	/// but instead, we let the arguments tuple steal the references
+	/// and decref them when it is deallocated.
+	/// 3) all conversions are now using the fast sequence protocol
+	/// (indexing the underlying object array).
+	
+	FeatureSet rFeatureSet;
+	PyObject *pyChannelList = NULL;
+
+	if (m_processType == numpy_bufferProcess) {
+		pyChannelList = m_ti.InputBuffers_As_SharedMemoryList(
+				inputBuffers,m_channels,m_blockSize,m_inputDomain);
+	} 
+
+	if (m_processType == legacyProcess) {
+		pyChannelList = m_ti.InputBuffers_As_PythonLists(
+			inputBuffers,m_channels,m_blockSize,m_inputDomain);
+	}
+
+#ifdef HAVE_NUMPY
+	if (m_processType == numpy_arrayProcess) {
+		pyChannelList = m_ti.InputBuffers_As_NumpyArray(
+			inputBuffers,m_channels,m_blockSize,m_inputDomain);
+	}
+#endif
+
+/// we don't expect these to fail unless out of memory (which is very unlikely on modern systems)
+#ifdef _DEBUG
+	if (!pyChannelList) {
+		if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
+		std::string method = PyString_AsString(m_pyProcess);
+		cerr << PLUGIN_ERROR << "Failed to create channel list." << endl;
+		return rFeatureSet;
+	}
+#endif		
+
+	PyObject *pyTimeStamp = NULL;
+		
+	if (m_useRealTimeFlag) {
+		//(1) pass TimeStamp as PyRealTime object
+		pyTimeStamp = PyRealTime_FromRealTime(timestamp);
+
+	} else {
+		//(2) pass TimeStamp as frame count (long Sample Count)
+		pyTimeStamp = PyLong_FromLong(Vamp::RealTime::realTime2Frame 
+		(timestamp, (unsigned int) m_inputSampleRate));
+	}
+
+
+#ifdef _DEBUG
+	if (!pyTimeStamp) {
+		if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
+		std::string method = PyString_AsString(m_pyProcess);
+		cerr << PLUGIN_ERROR << "Failed to create RealTime time stamp." << endl;
+		Py_DECREF(pyChannelList);
+		return rFeatureSet;
+	}
+#endif
+
+	/// Old method: Call python process (returns new reference)
+	/// PyObject *pyValue = PyObject_CallMethodObjArgs
+	/// (m_pyInstance,m_pyProcess,pyChannelList,pyTimeStamp,NULL);
+	
+	PyObject *pyArgs = PyTuple_New(2);
+	PyTuple_SET_ITEM(pyArgs, 0, pyChannelList); 
+	PyTuple_SET_ITEM(pyArgs, 1, pyTimeStamp); 
+
+	/// Call python process (returns new reference) {kwArgs = NULL}
+	PyObject *pyValue = PyObject_Call(m_pyProcessCallable,pyArgs,NULL);
+
+	if (!pyValue) {
+		if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}
+		std::string method = PyString_AsString(m_pyProcess);
+		cerr << PLUGIN_ERROR << "An error occurred while evaluating Python process." << endl;
+		Py_CLEAR(pyValue);
+		Py_CLEAR(pyArgs);
+		return rFeatureSet;
+	}
+        
+	rFeatureSet = m_ti.PyValue_To_FeatureSet(pyValue);
+	if (!m_ti.error) {
+		Py_DECREF(pyValue);
+		Py_DECREF(pyArgs);
+	} else {
+		typeErrorHandler(PyString_AsString(m_pyProcess),true);
+		Py_CLEAR(pyValue);
+		Py_CLEAR(pyArgs);
+	}
+	return rFeatureSet;
+}

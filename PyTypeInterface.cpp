@@ -230,7 +230,7 @@ PyTypeInterface::PyValue_To_InputDomain(PyObject* pyValue) const
 
 /// passing the sample buffers as builtin python lists
 /// Optimization: using fast sequence protocol
-inline PyObject*
+PyObject*
 PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype)
 {
 	//create a list of lists (new references)
@@ -289,7 +289,7 @@ PyTypeInterface::InputBuffers_As_PythonLists(const float *const *inputBuffers,co
 
 /// numpy buffer interface: passing the sample buffers as shared memory buffers
 /// Optimization: using sequence protocol for creating the buffer list
-inline PyObject*
+PyObject*
 PyTypeInterface::InputBuffers_As_SharedMemoryList(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype)
 {	
 	//create a list of buffers (returns new references)
@@ -320,7 +320,7 @@ PyTypeInterface::InputBuffers_As_SharedMemoryList(const float *const *inputBuffe
 /// numpy array interface: passing the sample buffers as 2D numpy array
 /// Optimization: using array API (needs numpy headers)
 #ifdef HAVE_NUMPY
-inline PyObject*
+PyObject*
 PyTypeInterface::InputBuffers_As_NumpyArray(const float *const *inputBuffers,const size_t& channels, const size_t& blockSize, const Vamp::Plugin::InputDomain& dtype)
 {	
 /*

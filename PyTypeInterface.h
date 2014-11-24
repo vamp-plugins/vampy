@@ -244,44 +244,44 @@ public:
 
 	//Vamp specific types
 	Vamp::Plugin::FeatureSet PyValue_To_FeatureSet(PyObject*) const;
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::FeatureSet &r) const
+	void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::FeatureSet &r) const
 		{ r = this->PyValue_To_FeatureSet(pyValue); }
 
 	Vamp::RealTime PyValue_To_RealTime(PyObject*) const;
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::RealTime &r) const
+	void PyValue_To_rValue(PyObject *pyValue, Vamp::RealTime &r) const
 		{ r = this->PyValue_To_RealTime(pyValue); }
 	
 	Vamp::Plugin::OutputDescriptor::SampleType PyValue_To_SampleType(PyObject*) const;
 
 	Vamp::Plugin::InputDomain PyValue_To_InputDomain(PyObject*) const;
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::InputDomain &r) const
+	void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::InputDomain &r) const
 		{ r = this->PyValue_To_InputDomain(pyValue); }
 	
 	/* Overloaded PyValue_To_rValue() to support generic functions */
-	inline void PyValue_To_rValue(PyObject *pyValue, float &defValue) const 
+	void PyValue_To_rValue(PyObject *pyValue, float &defValue) const 
 		{ float tmp = m_conv.PyValue_To_Float(pyValue);                                              
 			if(!m_error) defValue = tmp; }
-	inline void PyValue_To_rValue(PyObject *pyValue, size_t &defValue) const
+	void PyValue_To_rValue(PyObject *pyValue, size_t &defValue) const
 		{ size_t tmp = m_conv.PyValue_To_Size_t(pyValue); 
 			if(!m_error) defValue = tmp; }
-	inline void PyValue_To_rValue(PyObject *pyValue, bool &defValue) const
+	void PyValue_To_rValue(PyObject *pyValue, bool &defValue) const
 		{ bool tmp = m_conv.PyValue_To_Bool(pyValue); 
 			if(!m_error) defValue = tmp; }
-	inline void PyValue_To_rValue(PyObject *pyValue, std::string &defValue) const
+	void PyValue_To_rValue(PyObject *pyValue, std::string &defValue) const
 		{ std::string tmp = m_conv.PyValue_To_String(pyValue); 
 			if(!m_error) defValue = tmp; }
 	/*used by templates where we expect no return value, if there is one it will be ignored*/			
-	inline void PyValue_To_rValue(PyObject *pyValue, NoneType &defValue) const
+	void PyValue_To_rValue(PyObject *pyValue, NoneType &defValue) const
 		{ if (m_strict && pyValue != Py_None) 
 				setValueError("Strict conversion error: Expected 'None' type.",m_strict); 
 		}
 	
 	/* convert sequence types to Vamp List types */			
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::OutputList &r) const
+	void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::OutputList &r) const
 		{ r = this->PyValue_To_VampList<Vamp::Plugin::OutputList,Vamp::Plugin::OutputDescriptor>(pyValue); }
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::ParameterList &r) const
+	void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::ParameterList &r) const
 		{ r = this->PyValue_To_VampList<Vamp::Plugin::ParameterList,Vamp::Plugin::ParameterDescriptor>(pyValue); }
-	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::FeatureList &r) const
+	void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::FeatureList &r) const
 		{ r = this->PyValue_To_VampList<Vamp::Plugin::FeatureList,Vamp::Plugin::Feature>(pyValue); }
 	
 	/// this is only needed for RealTime->Frame conversion
@@ -299,32 +299,32 @@ private:
 	ValueError& lastError() const;
 
 	/* Overloaded _convert(), bypasses error checking to avoid doing it twice in internals. */
-	inline void _convert(PyObject *pyValue,float &r) const 
+	void _convert(PyObject *pyValue,float &r) const 
 		{ r = m_conv.PyValue_To_Float(pyValue); }
-	inline void _convert(PyObject *pyValue,size_t &r) const 
+	void _convert(PyObject *pyValue,size_t &r) const 
 		{ r = m_conv.PyValue_To_Size_t(pyValue); }
-	inline void _convert(PyObject *pyValue,bool &r) const 
+	void _convert(PyObject *pyValue,bool &r) const 
 		{ r = m_conv.PyValue_To_Bool(pyValue); }
-	inline void _convert(PyObject *pyValue,std::string &r) const
+	void _convert(PyObject *pyValue,std::string &r) const
 		{ r = m_conv.PyValue_To_String(pyValue); }
-	inline void _convert(PyObject *pyValue,std::vector<std::string> &r) const
+	void _convert(PyObject *pyValue,std::vector<std::string> &r) const
 		{ r = m_conv.PyValue_To_StringVector(pyValue); }
-	inline void _convert(PyObject *pyValue,std::vector<float> &r) const
+	void _convert(PyObject *pyValue,std::vector<float> &r) const
 		{ r = m_conv.PyValue_To_FloatVector(pyValue); }
-	inline void _convert(PyObject *pyValue,Vamp::RealTime &r) const 
+	void _convert(PyObject *pyValue,Vamp::RealTime &r) const 
 		{ r = PyValue_To_RealTime(pyValue); }
-	inline void _convert(PyObject *pyValue,Vamp::Plugin::OutputDescriptor::SampleType &r) const 
+	void _convert(PyObject *pyValue,Vamp::Plugin::OutputDescriptor::SampleType &r) const 
 		{ r = PyValue_To_SampleType(pyValue); }
-	// inline void _convert(PyObject *pyValue,Vamp::Plugin::InputDomain &r) const 
+	// void _convert(PyObject *pyValue,Vamp::Plugin::InputDomain &r) const 
 	// 	{ r = m_conv.PyValue_To_InputDomain(pyValue); }
 	    
 
 	/* Identify descriptors for error reporting */
-	inline std::string getDescriptorId(Vamp::Plugin::OutputDescriptor d) const
+	std::string getDescriptorId(Vamp::Plugin::OutputDescriptor d) const
 		{return std::string("Output Descriptor '") + d.identifier +"' ";}
-	inline std::string getDescriptorId(Vamp::Plugin::ParameterDescriptor d) const
+	std::string getDescriptorId(Vamp::Plugin::ParameterDescriptor d) const
 		{return std::string("Parameter Descriptor '") + d.identifier +"' ";}
-	inline std::string getDescriptorId(Vamp::Plugin::Feature f) const
+	std::string getDescriptorId(Vamp::Plugin::Feature f) const
 		{return std::string("Feature (") + f.label + ")"; }
 	
 public:
