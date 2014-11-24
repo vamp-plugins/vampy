@@ -739,6 +739,19 @@ PyTypeConversions::PyArray_To_FloatVector (PyObject *pyValue) const
 			return Output;
 	}
 }
+
+PyObject *
+PyTypeConversions::FloatVector_To_PyArray(const vector<float> &v) const
+{
+	npy_intp ndims[1];
+	ndims[0] = (int)v.size();
+	PyObject *arr = PyArray_SimpleNew(1, ndims, dtype_float32);
+	float *data = (float *)PyArray_DATA((PyArrayObject *)arr);
+	for (int i = 0; i < ndims[0]; ++i) {
+		data[i] = v[i];
+	}
+	return arr;
+}
 #endif
 
 PyObject *

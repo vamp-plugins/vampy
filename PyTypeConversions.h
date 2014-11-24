@@ -103,6 +103,7 @@ public:
 	// Numpy types
 #ifdef HAVE_NUMPY
 	std::vector<float> PyArray_To_FloatVector (PyObject *pyValue) const;
+	PyObject *FloatVector_To_PyArray(const std::vector<float> &) const; // Copying the data
 #endif
 
 	/// Convert DTYPE type 1D NumpyArray to std::vector<RET>
