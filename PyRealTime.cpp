@@ -329,7 +329,7 @@ PyRealTime_FromRealTime(Vamp::RealTime *rt) {
 
 /*PyRealTime from RealTime*/
 PyObject* 
-PyRealTime_FromRealTime(Vamp::RealTime& rt) {
+PyRealTime_FromRealTime(const Vamp::RealTime& rt) {
 
 	RealTimeObject *self =
 	PyObject_New(RealTimeObject, &RealTime_Type); 

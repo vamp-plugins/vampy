@@ -30,7 +30,7 @@ PyAPI_DATA(PyTypeObject) RealTime_Type;
 
 
 PyAPI_FUNC(PyObject *) 
-PyRealTime_FromRealTime(Vamp::RealTime&);
+PyRealTime_FromRealTime(const Vamp::RealTime&);
 
 PyAPI_FUNC(const Vamp::RealTime*) 
 PyRealTime_AsRealTime (PyObject *self);
