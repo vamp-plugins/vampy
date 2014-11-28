@@ -1,10 +1,15 @@
 
-CXX	:= i586-mingw32msvc-g++
+TOOLPREFIX     ?= i586-mingw32msvc-
+CXX		= $(TOOLPREFIX)g++
+CC		= $(TOOLPREFIX)gcc
+LD		= $(TOOLPREFIX)g++
+AR		= $(TOOLPREFIX)ar
+RANLIB		= $(TOOLPREFIX)ranlib
 CXXFLAGS	:= -I../include -O2 -Wall -I../../Python26/include
 
 vampy.dll:	PyPlugin.o PyPlugScanner.o vampy-main.o Mutex.o PyTypeInterface.o PyExtensionModule.o PyRealTime.o PyFeature.o PyParameterDescriptor.o PyOutputDescriptor.o PyFeatureSet.o  PyExtensionManager.o
 	i586-mingw32msvc-g++ -shared $^ -o $@ -L../lib -L../../Python26/libs -Wl,-Bstatic -lvamp-sdk -Wl,-Bdynamic -lpython26 -Wl,--retain-symbols-file=vamp-plugin.list
 
 clean:	
-	rm *.o
+	rm -f *.o 
 
