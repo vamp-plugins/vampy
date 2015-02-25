@@ -328,6 +328,7 @@ public:
 		return rValue;
 	}
 
+#ifdef HAVE_NUMPY
 	/// this is a special case. numpy.float64 has an array interface but no array descriptor
 	inline std::vector<float> PyArray0D_Convert(PyArrayInterface *ai) const
 	{
@@ -343,7 +344,8 @@ public:
 #endif
 		return rValue;
 	}
-
+#endif
+	
 	//Vamp specific types
 	Vamp::Plugin::FeatureSet PyValue_To_FeatureSet(PyObject*) const;
 	inline void PyValue_To_rValue(PyObject *pyValue, Vamp::Plugin::FeatureSet &r) const
