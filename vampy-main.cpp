@@ -286,7 +286,9 @@ static PyExtensionManager pyExtensionManager;
 
 const VampPluginDescriptor 
 *vampGetPluginDescriptor(unsigned int version,unsigned int index)
-{	
+{
+	DSTREAM << "# vampGetPluginDescriptor(" << version << "," << index << ")" << endl;
+	
     if (version < 1) return 0;
 
 	int isPythonInitialized = Py_IsInitialized();

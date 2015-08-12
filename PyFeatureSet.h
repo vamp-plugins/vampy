@@ -18,11 +18,11 @@ typedef struct {
     PyDictObject dict;
 } FeatureSetObject;
 
-PyAPI_DATA(PyTypeObject) FeatureSet_Type;
+extern PyTypeObject FeatureSet_Type;
 
 #define PyFeatureSet_CheckExact(v)	((v)->ob_type == &FeatureSet_Type)
 #define PyFeatureSet_Check(v) PyObject_TypeCheck(v, &FeatureSet_Type)
 
-void initFeatureSetType(void);
+extern void initFeatureSetType(void);
 
 #endif

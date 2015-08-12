@@ -1,5 +1,5 @@
 
-*  Vampy is a wrapper for the Vamp audio analysis plugin API.
+	Vampy is a wrapper for the Vamp audio analysis plugin API.
 	(http://www.vamp-plugins.org/) It allows for writing Vamp 
 	plugins in Python.
 

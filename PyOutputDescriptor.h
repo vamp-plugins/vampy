@@ -19,7 +19,7 @@ typedef struct {
 		PyObject *dict;
 } OutputDescriptorObject; 
 
-PyAPI_DATA(PyTypeObject) OutputDescriptor_Type;
+extern PyTypeObject OutputDescriptor_Type;
 
 #define PyOutputDescriptor_CheckExact(v)	((v)->ob_type == &OutputDescriptor_Type)
 #define PyOutputDescriptor_Check(v) PyObject_TypeCheck(v, &OutputDescriptor_Type)

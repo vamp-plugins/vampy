@@ -19,7 +19,7 @@ typedef struct {
 		Vamp::RealTime *rt;
 } RealTimeObject; 
 
-PyAPI_DATA(PyTypeObject) RealTime_Type;
+extern PyTypeObject RealTime_Type;
 
 #define PyRealTime_CheckExact(v)	((v)->ob_type == &RealTime_Type)
 #define PyRealTime_Check(v) PyObject_TypeCheck(v, &RealTime_Type)
@@ -29,10 +29,10 @@ PyAPI_DATA(PyTypeObject) RealTime_Type;
 /*		  		 	  PyRealTime C++ API  	  		  				*/
 
 
-PyAPI_FUNC(PyObject *) 
+extern PyObject *
 PyRealTime_FromRealTime(Vamp::RealTime&);
 
-PyAPI_FUNC(const Vamp::RealTime*) 
+extern const Vamp::RealTime*
 PyRealTime_AsRealTime (PyObject *self);
 
 

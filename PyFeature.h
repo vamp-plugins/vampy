@@ -41,7 +41,7 @@ typedef struct {
 		/// pointer to type interface required: PyTypeInterface ti;
 } FeatureObject; 
 
-PyAPI_DATA(PyTypeObject) Feature_Type;
+extern PyTypeObject Feature_Type;
 
 #define PyFeature_CheckExact(v)	((v)->ob_type == &Feature_Type)
 #define PyFeature_Check(v) PyObject_TypeCheck(v, &Feature_Type)

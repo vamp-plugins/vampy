@@ -19,7 +19,7 @@ typedef struct {
 		PyObject *dict;
 } ParameterDescriptorObject; 
 
-PyAPI_DATA(PyTypeObject) ParameterDescriptor_Type;
+extern PyTypeObject ParameterDescriptor_Type;
 
 #define PyParameterDescriptor_CheckExact(v)	((v)->ob_type == &ParameterDescriptor_Type)
 #define PyParameterDescriptor_Check(v) PyObject_TypeCheck(v, &ParameterDescriptor_Type)
