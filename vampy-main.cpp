@@ -30,9 +30,13 @@
 // define this symbol if you use another version of numpy in the makefile
 // Vampy will not attempt to load a lower version than specified
 #ifdef HAVE_NUMPY
-#ifndef NUMPY_SHORTVERSION
-#define NUMPY_SHORTVERSION 1.9
+#ifndef NUMPY_MAJORVERSION
+#define NUMPY_MAJORVERSION 1
 #endif
+#ifndef NUMPY_MINORVERSION
+#define NUMPY_MINORVERSION 9
+#endif
+
 #endif
 
 #include "vamp/vamp.h"
@@ -117,13 +121,13 @@ version of Numpy is used when loading the library.
 
 #ifdef HAVE_NUMPY
 
-	string ver;
+	string ver, majorver, minorver;
 	std::istringstream verStream;
-	float numpyVersion;
+	int numpyVersionMajor, numpyVersionMinor;
 
 	/// attmept to test numpy version before importing the array API
 	DSTREAM << "Numpy build information: ABI level: " << NPY_VERSION 
-		<< " Numpy version: " << NUMPY_SHORTVERSION << endl;
+		<< " Numpy version: " << NUMPY_MAJORVERSION << "." << NUMPY_MINORVERSION << endl;
 	
 	PyObject *pyModule, *pyDict, *pyVer;
 	
@@ -150,14 +154,21 @@ version of Numpy is used when loading the library.
 
 	ver = PyString_AsString(pyVer);
 	ver = ver.substr(0,ver.rfind("."));
-
+	majorver = ver.substr(0,ver.rfind("."));
+	minorver = ver.substr(ver.rfind(".")+1);
+	
 	// parse version string to float
-	verStream.str(ver);
-	verStream >> numpyVersion;
+	verStream.str(majorver);
+	verStream >> numpyVersionMajor;
+	verStream.str(minorver);
+	verStream >> numpyVersionMinor;
 
-	DSTREAM << "Numpy runtime version: " << numpyVersion << endl;
-	if (numpyVersion < (float) NUMPY_SHORTVERSION) {
-		cerr << "ERROR: Incompatible Numpy version found: " << numpyVersion << endl;
+	DSTREAM << "Numpy runtime version: " << numpyVersionMajor << "." << numpyVersionMinor << endl;
+	
+	if(numpyVersionMajor < NUMPY_MAJORVERSION ||
+	   (numpyVersionMajor < NUMPY_MAJORVERSION && 
+	    numpyVersionMinor < NUMPY_MINORVERSION)) {
+		cerr << "ERROR: Incompatible Numpy version found: " << ver << endl;
 		goto numpyFailure;
 	}
 
@@ -180,7 +191,7 @@ version of Numpy is used when loading the library.
 
 
 numpyFailure: 
-	cerr << "Please make sure you have Numpy " << NUMPY_SHORTVERSION << " or greater installed." << endl;
+	cerr << "Please make sure you have Numpy " << NUMPY_MAJORVERSION << "."  << NUMPY_MINORVERSION << " or greater installed." << endl;
 	cerr << "Vampy: Numpy support disabled." << endl;
 	numpyInstalled = false;
 	arrayApiInitialised = true;
