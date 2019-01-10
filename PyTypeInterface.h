@@ -289,11 +289,6 @@ public:
 		}
 		list.push_back(element);
 		return list;
-		
-#ifdef _DEBUG
-			cerr << "PyTypeInterface::PyValue_To_VampList failed. Expected iterable return type." << endl;
-#endif			
-
 	}
 
 	/// Convert DTYPE type 1D NumpyArray to std::vector<RET>
