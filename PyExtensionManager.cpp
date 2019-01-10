@@ -135,7 +135,6 @@ PyExtensionManager::updateAllLocals() const
 void 
 PyExtensionManager::cleanLocalNamespace(const char* plugModuleName) const
 {
-	
 	/// these references are all borrowed
 	PyObject *pyPlugModule = PyDict_GetItemString(m_pyGlobalNamespace,plugModuleName);
 	if (!pyPlugModule) return;
@@ -183,6 +182,8 @@ PyExtensionManager::updateLocalNamespace(const char* plugModuleName) const
 				cerr << "Vampy::PyExtensionManager::updateLocalNamespace: Failed: " 
 				<< name << " of "<< plugModuleName << endl;
 			else DSTREAM << "Updated local name: " << name << endl;
+		} else {
+			DSTREAM << "Local namespace does not contain name: " << name << endl;
 		}
 		Py_DECREF(key);
 	}
@@ -192,7 +193,6 @@ PyExtensionManager::updateLocalNamespace(const char* plugModuleName) const
 bool 
 PyExtensionManager::cleanModule(void) const
 {
-		
 	PyObject *m = PyImport_AddModule("vampy");
 	if (!m) {
 		if (PyErr_Occurred()) {PyErr_Print(); PyErr_Clear();}

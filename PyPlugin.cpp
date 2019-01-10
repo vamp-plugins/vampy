@@ -64,9 +64,10 @@ PyPlugin::PyPlugin(std::string pluginKey, float inputSampleRate, PyObject *pyCla
 		Py_CLEAR(args);
 		Py_CLEAR(pyInputSampleRate);
 		cerr << "PyPlugin::PyPlugin: Failed to create Python plugin instance for key \"" 
-		<< pluginKey << "\" (is the 1-arg class constructor from sample rate correctly provided?)" << endl;
+		     << pluginKey << "\" (is the 1-arg class constructor from sample rate correctly provided?)" << endl;
 		throw std::string("Constructor failed");
 	}
+
 	Py_INCREF(m_pyInstance);
 	Py_DECREF(args);
 	Py_DECREF(pyInputSampleRate);
