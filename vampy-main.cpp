@@ -353,7 +353,7 @@ const VampPluginDescriptor
 
 	DSTREAM << "Accessing adapter index: " << index << " (adapters: " << adapters.size() << ")" << endl;
 
-	if (index<adapters.size()) {
+	while (index < adapters.size()) {
 
 		const VampPluginDescriptor *tmp = adapters[index]->getDescriptor();
 
@@ -364,12 +364,13 @@ const VampPluginDescriptor
 			pyExtensionManager.deleteModuleName(adapters[index]->getPlugKey());
 			delete adapters[index];
 			adapters.erase(adapters.begin()+index);
-			return 0;
+			continue;
 		}
 
 		return tmp;
+	}
 
-	} else return 0;
+	return 0;
 }
 
 
