@@ -214,15 +214,11 @@ PyPlugScanner::listFiles(string dir, string extension)
             
     struct dirent *e = 0;
     while ((e = readdir(d))) {
- 
-        if (!e->d_name) continue;
-       
         size_t len = strlen(e->d_name);
         if (len < extlen + 2 ||
             e->d_name + len - extlen - 1 != "." + extension) {
             continue;
         }
-		//cerr << "pyscripts: " << e->d_name <<  endl;
         files.push_back(e->d_name);
     }
 
