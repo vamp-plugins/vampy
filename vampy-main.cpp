@@ -359,11 +359,11 @@ const VampPluginDescriptor
 
 		if (adapters[index]->failed()) { 
 			cerr << "\nERROR: [in vampGetPluginDescriptor] Removing adapter of: \n'" 
-			<< adapters[index]->getPlugKey() << "'\n" 
-			<< "The plugin has failed to construct. Hint: Check __init__() function." << endl;
+			     << adapters[index]->getPlugKey() << "'\n" 
+			     << "The plugin has failed to construct. Hint: Check __init__() function." << endl;
 			pyExtensionManager.deleteModuleName(adapters[index]->getPlugKey());
 			delete adapters[index];
-			adapters.erase(adapters.begin()+index);
+			adapters.erase(adapters.begin() + index);
 			continue;
 		}
 
