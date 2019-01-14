@@ -25,22 +25,25 @@ using std::find;
 
 //static
 const char* PyExtensionManager::m_exposedNames[] = {
+	
 		"ParameterDescriptor",
 		"OutputDescriptor",
-		"ParameterList",
-		"OutputList",
-	    "FeatureList",
 		"FeatureSet",
 		"Feature",
 		"RealTime",
 		"frame2RealTime",
-/* 		//using builtin objects:
+
+/* 		// using builtin objects:
+		"ParameterList",
+		"OutputList",
+		"FeatureList",
 		"OneSamplePerStep",
 		"FixedSampleRate",
 		"VariableSampleRate",
 		"TimeDomain",
 		"FrequencyDomain",
 */
+		
 		NULL
 };
 
@@ -135,6 +138,8 @@ PyExtensionManager::updateAllLocals() const
 void 
 PyExtensionManager::cleanLocalNamespace(const char* plugModuleName) const
 {
+	DSTREAM << "Cleaning local namespace: " << plugModuleName << endl;
+
 	/// these references are all borrowed
 	PyObject *pyPlugModule = PyDict_GetItemString(m_pyGlobalNamespace,plugModuleName);
 	if (!pyPlugModule) return;
@@ -160,6 +165,8 @@ PyExtensionManager::cleanLocalNamespace(const char* plugModuleName) const
 void 
 PyExtensionManager::updateLocalNamespace(const char* plugModuleName) const
 {
+	DSTREAM << "Updating local namespace: " << plugModuleName << endl;
+
 	/// this allows the use of common syntax like:
 	/// from vampy import * 
 	/// even after several unload/reload cycles
