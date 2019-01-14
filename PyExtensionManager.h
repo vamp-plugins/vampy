@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
 
  * Vampy : This plugin is a wrapper around the Vamp plugin API.
@@ -64,9 +65,9 @@ public:
 	void setPlugModuleNames(vector<string> pyPlugs);
 	void deleteModuleName(string plugKey);
 
-private:
 	static const char* m_exposedNames[];
-	
+
+private:
 	vector<string> m_plugModuleNames;
 	PyObject* m_pyGlobalNamespace;
 	PyObject* m_pyVampyNamespace;

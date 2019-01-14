@@ -1,3 +1,4 @@
+/* -*- c-basic-offset: 8 indent-tabs-mode: t -*- */
 /*
 
  * Vampy : This plugin is a wrapper around the Vamp plugin API.
@@ -11,6 +12,8 @@
 
 
 #include "PyPlugScanner.h"
+#include "PyExtensionManager.h"
+#include "Debug.h"
 #include <algorithm>
 #include <cstdlib>
 //#include "vamp-hostsdk/PluginHostAdapter.h"
@@ -95,13 +98,12 @@ PyPlugScanner::getPyPlugs()
 					pluginKey=joinPath(m_path[i],script)+":"+classname;
 					pyClass = getScriptClass(m_path[i],classname);
 					if (pyClass == NULL) 
-					cerr << "Warning: Syntax error in VamPy plugin:  " 
+					cerr << "Warning: Syntax error or other problem in scanning VamPy plugin: " 
 					     << classname << ". Avoiding plugin." << endl;
 					else { 
 							pyPlugs.push_back(pluginKey);
 							m_pyClasses.push_back(pyClass);
-						}
-					//pyPlugs.push_back(pluginKey);
+					}
 				}
 		}		
 	}
@@ -142,7 +144,6 @@ return m_pyClasses;
 PyObject* 
 PyPlugScanner::getScriptClass(string path, string classname)
 {
-
 	//Add plugin path to active Python Path 
 	string pyCmd = "import sys\nsys.path.append('" + path + "')\n";
 	PyRun_SimpleString(pyCmd.c_str());
@@ -169,15 +170,89 @@ PyPlugScanner::getScriptClass(string path, string classname)
 	//Get the PluginClass from the module (borrowed reference)
 	PyObject *pyClass = PyDict_GetItemString(pyDict, classname.c_str());
 
-	//Check if class is present and a callable method is implemented
-	if (pyClass && PyCallable_Check(pyClass)) {
-
-	    return pyClass;
-	}	
-	else {
+	if (pyClass == Py_None) {
+		DSTREAM << "Vampy: class name " << classname
+			<< " is None in module; assuming it was scrubbed "
+			<< "following an earlier load failure" << endl;
+		return NULL;
+	}
+	
+	// Check if class is present and a callable method is implemented
+	if (!pyClass || !PyCallable_Check(pyClass)) {
 		cerr << "ERROR: callable plugin class could not be found in source: " << classname << endl 
 			<< "Hint: plugin source filename and plugin class name must be the same." << endl;
 		PyErr_Print(); 
+		return NULL;
+	}
+
+	bool acceptable = true;
+	
+        // Check that the module doesn't have any name collisions with
+        // our own symbols
+
+        int i = 0;
+        while (PyExtensionManager::m_exposedNames[i]) {
+
+		const char* name = PyExtensionManager::m_exposedNames[i];
+		i++;
+
+		PyObject *item = PyDict_GetItemString(pyDict, name);
+		if (!item) continue;
+
+		if (item == Py_None) {
+			DSTREAM << "Vampy: name " << name << " is None "
+				<< "in module " << classname
+				<< "; assuming it was cleared on unload"
+				<< endl;
+			continue;
+		}
+		
+		PyTypeObject *metatype = Py_TYPE(item);
+
+		if (!strcmp(name, "frame2RealTime")) {
+			if (metatype != &PyCFunction_Type) {
+				cerr << "ERROR: plugin " << classname
+				     << " redefines Vampy function name \""
+				     << name << "\" (metatype is \""
+				     << metatype->tp_name << "\")" << endl;
+				acceptable = false;
+				break;
+			} else {
+				continue;
+			}
+		}
+		
+		if (metatype != &PyType_Type) {
+			cerr << "ERROR: plugin " << classname
+			     << " uses Vampy reserved type name \"" << name
+			     << "\" for non-type (metatype is \""
+			     << metatype->tp_name << "\")" << endl;
+			acceptable = false;
+			break;
+		}
+
+		PyTypeObject *type = (PyTypeObject *)item;
+		if (type->tp_name == std::string("vampy.") + name) {
+			DSTREAM << "Vampy: acceptable Vampy type name "
+				<< type->tp_name << " found in module" << endl;
+		} else {
+			cerr << "ERROR: plugin " << classname
+			     << " redefines Vampy type \"" << name << "\"";
+			if (strcmp(type->tp_name, name)) {
+				cerr << " (as \"" << type->tp_name << "\")";
+			}
+			cerr << endl;
+			acceptable = false;
+			break;
+		}
+        }
+
+	if (acceptable) {
+		return pyClass;
+	} else {
+		PyObject *key = PyString_FromString(classname.c_str());
+		PyDict_SetItem(pyDict, key, Py_None);
+		Py_DECREF(key);
 		return NULL;
 	}
 }
