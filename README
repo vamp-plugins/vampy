@@ -29,17 +29,17 @@ WHAT IS IT FOR?
 
 WHY PYTHON?
 	
-	The Python programming language is rapidly gaining popularity
-	in the scientific community. Besides being a high-productivity
-	interpreted language, it has extensions for scientific computing
-	such as Numpy, an efficient numerical library and SciPy, a 
-	collection of Python modules for signal processing, 
-	linear algebra, statistics and machine learning ... 
-	(www.SciPy.org). These packages together with matplotlib 
-	(http://matplotlib.sourceforge.net/) provide similar capabilities
-	to most commercial modelling environments. As a further advantage, 
-	Python is a general purpose language which also supports 
-	the functional programming style.	
+	The Python programming language is extremely popular in the
+	scientific community. Besides being a high-productivity
+	interpreted language, it has extensions for scientific
+	computing such as Numpy, an efficient numerical library and
+	SciPy, a collection of Python modules for signal processing,
+	linear algebra, statistics and machine learning ...
+	(www.SciPy.org). These packages together with matplotlib
+	(http://matplotlib.sourceforge.net/) provide similar
+	capabilities to most commercial modelling environments. As a
+	further advantage, Python is a general purpose language which
+	also supports the functional programming style.
 
 
 HOW DOES IT WORK?
@@ -61,28 +61,30 @@ HOW DOES IT WORK?
 	
 OBTAINING VAMPY:
 
-	Vampy is a free, cross platform, open source package. The source
-	code is available from the Vamp-Plugins subversion repository
-	on SourceForge. (http://vamp.svn.sourceforge.net/)
+	Vampy is a free, cross platform, open source package. The
+	source code is available from its repository at
+	https://code.soundsoftware.ac.uk/projects/vampy.
 	
-	* Binary distributions are available for Windows, Mac OS/X, 
-	Linux and Solaris Unix.
+	* Binary distributions are available for Windows, macOS, and
+	Linux.
 
-	* The source code can be obtained using the SVN command:
-	svn co https://vamp.svn.sourceforge.net/svnroot/vamp/vamp-vampy vampy
+	* The source code can be obtained using the Mercurial command:
+	hg clone https://code.soundsoftware.ac.uk/hg/vampy
 
 
 DEPENDENCIES:
 
 	* Vampy requires Python 2.7.
 	
-	Note that Vampy does not support the new flavour of Python (3.x) 
-	which breaks language compatibility with the 2.x series.
+	Note that Vampy does not support Python 3 at all at this
+ 	point.  Note also that on a Mac in normal circumstances Vampy
+ 	expects to use the system installation of Python, so plugin
+ 	modules you write should be tested using this.
 	
-	* Vampy supports Numpy 1.1. or greater. 
+	* Vampy supports Numpy 1.1 or greater. 
 	
-	Using Numpy is optional, however writing plugins in pure Python
-	results in significantly longer processing times.
+	Using Numpy is optional, however writing plugins in pure
+	Python typically results in significantly slower processing.
 
 
 BUILDING VAMPY:
@@ -233,8 +235,11 @@ BASIC RULES:
 		
 		* Scripts with the wrong number of arguments to the plugin 
 		class's __init__() function will be avoided.
+
+		* Scripts that redefine any of Vampy's standard type names
+		will be avoided.
 		
-	(5) Unknown scripts may cause undesired behaviour (or a crash).  
+	(5) Unknown scripts may cause undesired behaviour.
 		Don't put arbitrary Python scripts in your Vamp directory,
 		you may use a subdirectory for that.
 
@@ -248,10 +253,12 @@ PLUGIN ERRORS:
 	execution. For example, a plugin calculating the dot product
 	of two vectors with different sizes will produce a runtime error.
 	
-	Error messages from Vampy are printed on the standard output.
+	Error messages from Vampy are printed on the standard error
+	channel.
 	If you're using a graphical host (such as Sonic Visualiser)
 	you may start the application from a command line terminal
-	in order to see these messages.
+	in order to see these messages, or they may be forwarded by
+	the host to its own debug log file.
 		
 	Exceptions:
 		
@@ -562,5 +569,6 @@ LICENCE:
 	VamPy was written by Gyorgy Fazekas at the Centre for Digital
 	  Music, Queen Mary University of London.
 	Copyright 2008-2009 Gyorgy Fazekas.
+	Copyright 2008-2019 Queen Mary University of London.
 	
 
