@@ -22,7 +22,7 @@ addons:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then brew update ; brew install libsndfile ; fi
   - if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then ( cd ../ ; hg clone https://code.soundsoftware.ac.uk/hg/vamp-plugin-sdk ; cd vamp-plugin-sdk ; make -f build/Makefile.osx ) ; fi
-  - if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then export PATH=$PATH:$PWD/../vamp-plugin-sdk/host ; fi
+  - if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then export PATH=/usr/bin:$PATH:$PWD/../vamp-plugin-sdk/host ; fi
 
 script:
   - if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then make -f Makefile.osx ; else make -f Makefile.linux ; fi
