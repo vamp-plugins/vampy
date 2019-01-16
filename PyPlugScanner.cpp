@@ -325,11 +325,28 @@ PyPlugScanner::listFiles(string dir, string extension)
 std::vector<std::string>
 PyPlugScanner::getAllValidPath()
 {
-	
     std::vector<std::string> path;
     std::string envPath;
 
-    char *cpath = getenv("VAMP_PATH");
+    bool nonNative32 = false;
+#ifdef _WIN32
+    BOOL (WINAPI *fnIsWow64Process)(HANDLE, PBOOL) =
+        (BOOL (WINAPI *)(HANDLE, PBOOL)) GetProcAddress
+        (GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+    if (fnIsWow64Process) {
+	    BOOL wow64 = FALSE;
+	    if (fnIsWow64Process(GetCurrentProcess(), &wow64) && wow64) {
+		    nonNative32 = true;
+	    }
+    }
+#endif
+
+    char *cpath;
+    if (nonNative32) {
+	    cpath = getenv("VAMP_PATH_32");
+    } else {
+	    cpath = getenv("VAMP_PATH");
+    }
     if (cpath) envPath = cpath;
 
 #ifdef _WIN32
