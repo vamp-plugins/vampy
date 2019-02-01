@@ -71,14 +71,14 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\vamp-plugin-sdk;C:\Python27\include;C:\Python27\Lib\site-packages\numpy\core\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;VAMPY_EXPORTS;HAVE_NUMPY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalOptions>/EXPORT:vampGetPluginDescriptor %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>VampPluginSDK.lib;python27.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>python27.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\vamp-plugin-sdk\build\Release;C:\Python27\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -101,6 +101,9 @@
     <ClInclude Include="PyTypeInterface.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\vamp-plugin-sdk\src\vamp-sdk\FFT.cpp" />
+    <ClCompile Include="..\vamp-plugin-sdk\src\vamp-sdk\PluginAdapter.cpp" />
+    <ClCompile Include="..\vamp-plugin-sdk\src\vamp-sdk\RealTime.cpp" />
     <ClCompile Include="Mutex.cpp" />
     <ClCompile Include="PyExtensionManager.cpp" />
     <ClCompile Include="PyExtensionModule.cpp" />
