@@ -1,0 +1,20 @@
+FROM ubuntu:16.04
+MAINTAINER Chris Cannam <cannam@all-day-breakfast.com>
+RUN apt-get update && \
+    apt-get install -y \
+    build-essential \
+    libsndfile-dev \
+    git \
+    mercurial \
+    curl wget \
+    python libpython2.7-dev python-numpy
+RUN apt-cache search python
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN hg clone -r[[REVISION]] https://code.soundsoftware.ac.uk/hg/vampy
+RUN hg clone https://code.soundsoftware.ac.uk/hg/vamp-plugin-sdk
+WORKDIR vamp-plugin-sdk
+RUN ./configure
+RUN make -j3
+WORKDIR ../vampy
+RUN make -f Makefile.linux
+

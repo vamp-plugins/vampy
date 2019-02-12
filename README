@@ -10,9 +10,9 @@ WHAT IS IT FOR?
 	with a C/C++ Application Programming Interface (API).
 
 	Typical applications of Vamp plugins include visualisation, using 
-	a host such as Sonic Visualiser (http://www.sonicvisualiser.org/),
+	a host such as Sonic Visualiser (https://www.sonicvisualiser.org/),
 	or batch feature extraction from audio, using Sonic Annotator 
-	(http://www.omras2.org/SonicAnnotator).
+	(https://vamp-plugins.org/sonic-annotator).
 
 	Vamp plugins are typically written in C++. Although currently
 	available plugin hosts are valuable tools in audio research,
@@ -78,8 +78,8 @@ DEPENDENCIES:
 	
 	Note that Vampy does not support Python 3 at all at this
  	point.  Note also that on a Mac in normal circumstances Vampy
- 	expects to use the system installation of Python, so plugin
- 	modules you write should be tested using this.
+ 	expects to use the system installation of Python, so plugins
+ 	that you write should be tested using the system Python.
 	
 	* Vampy supports Numpy 1.1 or greater. 
 	
