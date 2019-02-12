@@ -145,7 +145,10 @@ PyObject*
 PyPlugScanner::getScriptClass(string path, string classname)
 {
 	//Add plugin path to active Python Path 
-	string pyCmd = "import sys\nsys.path.append('" + path + "')\n";
+	string pyCmd =
+		"import sys\n"
+		"sys.path.append('" + path + "')\n"
+		"sys.argv = ['" + classname + "']\n";
 	PyRun_SimpleString(pyCmd.c_str());
 
 	//Assign an object to the source code
