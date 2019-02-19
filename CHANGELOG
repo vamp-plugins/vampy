@@ -1,0 +1,75 @@
+
+UPDATES IN VERSION 2.2:
+
+        * Provide an argv list to the plugin script, in case it or one
+          of its imports tries to index into it
+        * Add CHANGELOG!
+
+
+UPDATES IN VERSION 2.1:
+
+        * Fix crash when a file is found that is not loadable as a
+          plugin but redefines one of VamPy's "reserved" names
+        * Continue to load subsequent plugins after one fails; don't
+          just give up on all of them
+        * Add VAMPY_VERBOSE environment variable for debug output
+        * Update builds for current Python (2.x branch), NumPy etc
+        
+
+UPDATES IN VERSION 2.0:
+
+        * More complete, two-way Numpy support
+        * Embedded extension module exposing Vamp defined names 
+                e.g. ParameterDescriptor. This allows easier porting to C++.
+        * Support RealTime time stamps
+        * Support byte compiled Python scripts (.pyc)
+        * Environment variables
+        * Flags to control how Vampy works with each plugin
+        * Flexible type inference to take advantage of dynamic typing
+        * More complete error checking for all Python/C API calls
+        * Various optimisations and speed-ups
+        
+        Vampy now supports two main use cases: 
+        1) Prototyping C++ Vamp plugins in Python.
+        2) Develop Vampy plugins in Python to allow the use of a vamp
+        hosts for e.g. batch processing or visualisation.
+        
+        Vampy provides an extension module which allows the use of
+        data types defined in the Vamp API; such as FeatureSet() or 
+        RealTime() in Vampy plugins. 
+
+
+BACKWARD COMPATIBILITY (Read this if you used Vampy 1):
+        
+        This is the second version of Vampy. It is largely compatible
+        with the previous version and it is able to run plugins 
+        written for it. However, due to some bug fixes in this release, 
+        it may be required to modify old plugins to work correctly 
+        with Vampy 2.0:
+        
+        * The size of the input buffers of frequency domain plugins 
+        are now longer by one element corresponding to the Nyquist
+        frequency output of the FFT. 
+        
+        * The legacy interface now uses complex numbers to pass the 
+        FFT output to frequency domain plugins in Vampy 2.0 instead 
+        of floating point values.
+        
+        * Consequently, the size of the input buffer for each 
+        audio channel is blockSize/2 + 1 if the legacy interface
+        is used and blockSize+2 if the buffer interface is used
+        in frequency domain plugins. Time domain plugins however
+        do not require any change.
+        
+        * Vampy 1 had two types of process interfaces; the legacy
+        and the buffer interface (for Numpy support). They were
+        selected based on the name of the process method.
+        A process() implementation used the legacy interface, 
+        a processN() implementation used the Numpy buffer interface.
+        This behaviour is retained for backward compatibility but
+        only if no flags are set. The use of processN() is now 
+        obsolete, since the standard process() implementation can 
+        be configured to use any of the available interfaces by 
+        setting the flags appropriately.
+
+
