@@ -3,6 +3,6 @@ syntax: glob
 *.pyc
 *.so
 *.orig
-
-
+*.o
+*.a
 
