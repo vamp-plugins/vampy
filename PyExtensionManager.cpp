@@ -47,7 +47,9 @@ const char* PyExtensionManager::m_exposedNames[] = {
 		NULL
 };
 
-PyExtensionManager::PyExtensionManager()
+PyExtensionManager::PyExtensionManager() :
+	m_pyGlobalNamespace(0),
+	m_pyVampyNamespace(0)
 {
 	DSTREAM << "Creating extension manager." << endl;
 }
@@ -82,15 +84,22 @@ PyExtensionManager::initExtension()
 
 PyExtensionManager::~PyExtensionManager()
 {
+	if (!m_pyVampyNamespace) {
+		DSTREAM << "Vampy::~PyExtensionManager: manager was never initialised, or initialisation did not complete: not attempting cleanup" << endl;
+		return;
+	}
+		
 	DSTREAM << "Cleaning locals..." << endl;
 
 	cleanAllLocals(); 
 
 	DSTREAM << "Cleaning module..." << endl;
 
-	if (!cleanModule()) 
+	if (!cleanModule()) {
 		cerr << "Vampy::~PyExtensionManager: failed to clean extension module." << endl;
-	DSTREAM << "Vampy::~PyExtensionManager: Extension module cleaned." << endl;
+	} else {
+		DSTREAM << "Vampy::~PyExtensionManager: Extension module cleaned." << endl;
+	}
 }
 
 
