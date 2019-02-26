@@ -58,6 +58,8 @@
 #include <dlfcn.h>
 #endif
 
+#include "version.h"
+
 using std::cerr;
 using std::endl;
 using std::string;
@@ -199,9 +201,11 @@ numpyFailure:
 	return;
 
 /*HAVE_NUMPY*/
-#endif 
+#else
+	DSTREAM << "Numpy support deselected at compile time, not attempting to initialise it" << endl;
+#endif
 
-    numpyInstalled = false;
+	numpyInstalled = false;
 	arrayApiInitialised = true;
 	return;
 }
@@ -300,8 +304,10 @@ const VampPluginDescriptor
 {
 	DSTREAM << "# vampGetPluginDescriptor(" << version << "," << index << ")" << endl;
 	
-    if (version < 1) return 0;
+	if (version < 1) return 0;
 
+	DSTREAM << "# Vampy version: " << VAMPY_VERSION << endl;
+	
 	int isPythonInitialized = Py_IsInitialized();
 	DSTREAM << "# isPythonInitialized: " << isPythonInitialized << endl;
 	DSTREAM << "# haveScannedPlugins: " << haveScannedPlugins << endl;

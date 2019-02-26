@@ -1,4 +1,11 @@
 
+UPDATES IN VERSION 2.3:
+
+        * Fix crash when Vampy is loaded and unloaded without querying
+          any plugins
+        * Fix a further possible crash with non-loadable plugin modules
+
+
 UPDATES IN VERSION 2.2:
 
         * Provide an argv list to the plugin script, in case it or one
