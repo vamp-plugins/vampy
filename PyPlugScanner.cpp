@@ -212,6 +212,15 @@ PyPlugScanner::getScriptClass(string path, string classname)
 		
 		PyTypeObject *metatype = Py_TYPE(item);
 
+		if (!metatype) {
+			cerr << "ERROR: plugin " << classname
+			     << " reports null metatype for Vampy name \""
+			     << name << "\" (incomplete due to load error?)"
+			     << endl;
+			acceptable = false;
+			break;
+		}
+
 		if (!strcmp(name, "frame2RealTime")) {
 			if (metatype != &PyCFunction_Type) {
 				cerr << "ERROR: plugin " << classname
