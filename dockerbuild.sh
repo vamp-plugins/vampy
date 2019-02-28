@@ -27,6 +27,7 @@ sudo docker rm "$container"
 
 ldd vampy.so
 VAMP_PATH=".:./Example VamPy plugins" ../vamp-plugin-sdk/host/vamp-simple-host -l
+VAMP_PATH="." VAMPY_VERBOSE=1 ../vamp-plugin-sdk/host/vamp-simple-host -l 2>&1 | grep "Vampy version"
 
 echo "Done!"
 
