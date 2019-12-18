@@ -19,6 +19,10 @@
 //#include "vamp-hostsdk/PluginHostAdapter.h"
 
 #ifdef _WIN32
+// We should be using the unicode apis, but we're not (yet)
+#undef UNICODE
+#undef _UNICODE
+#define _MBCS 1
 #include <windows.h>
 #include <tchar.h>
 #define pathsep ("\\")
@@ -385,7 +389,7 @@ PyPlugScanner::getAllValidPath()
             }
         }
 #ifdef _WIN32
-        char *cpfiles = getenv("ProgramFiles");
+        const char *cpfiles = getenv("ProgramFiles");
         if (!cpfiles) cpfiles = "C:\\Program Files";
         std::string pfiles(cpfiles);
         std::string::size_type f;

@@ -39,6 +39,13 @@
 
 #endif
 
+#ifdef _WIN32
+// We should be using the unicode apis, but we're not (yet)
+#undef UNICODE
+#undef _UNICODE
+#define _MBCS 1
+#endif
+
 #include "vamp/vamp.h"
 #include "vamp-sdk/PluginAdapter.h"
 #include "PyPlugScanner.h"
